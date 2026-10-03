@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -12,13 +12,31 @@
 <header class="topbar">
   <div class="brand">
     <span class="logo">运</span>
-    <div><b>运营分析工作台</b><small>Web 版 · 数据只保存在本机浏览器</small></div>
+    <div class="brand-txt"><b>运营分析工作台</b><small>Web 版 · 数据只保存在本机浏览器</small></div>
   </div>
   <div class="status" id="statusBar"></div>
+  <div class="top-tools">
+    <label class="top-search">
+      <span class="ts-ico">⌕</span>
+      <input type="text" id="globalSearch" placeholder="搜索页面 / 功能" autocomplete="off">
+      <span class="ts-key">/</span>
+    </label>
+    <button class="icon-btn" id="topRefresh" title="刷新当前视图" aria-label="刷新">⟳</button>
+    <button class="icon-btn" id="topBell" title="去每日晨检" aria-label="每日晨检">◔</button>
+    <span class="avatar" title="数据仅存于本机浏览器">运</span>
+  </div>
   <button class="nav-toggle" id="navToggle" aria-label="展开菜单">☰</button>
 </header>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
+    <div class="side-brand">
+      <span class="side-logo">◈</span>
+      <div><b>Ops Workbench</b><small>运营分析工作台</small></div>
+    </div>
+    <div class="side-cta">
+      <b>AI 工作流已就绪</b>
+      <small>5 个 Skill · 3 份台账 · 全部本地运行</small>
+    </div>
     <nav id="nav"></nav>
     <div class="side-foot">
       <button class="btn ghost sm" data-act="export-all">导出工作区</button>

@@ -1,10 +1,10 @@
-﻿/* charts.js — 轻量 SVG 图表（无第三方依赖） */
+/* charts.js — 轻量 SVG 图表（无第三方依赖） */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) { module.exports = factory(); }
   else { root.OpsCharts = factory(); }
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
-  var STATUS_COLOR = { '正常': '#1f9d6f', '需关注': '#c8862a', '异常': '#c0392b', '无数据': '#9aa7b4' };
+  var STATUS_COLOR = { '正常': '#12a870', '需关注': '#e0a020', '异常': '#e5484d', '无数据': '#9aa0b4' };
 
   function escapeXml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
@@ -18,7 +18,7 @@
     var step = (w - pad * 2) / (vals.length - 1);
     var pts = vals.map(function (v, i) { return [pad + i * step, h - pad - ((v - min) / span) * (h - pad * 2)]; });
     var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
-    var color = opts.color || '#2b5a9a';
+    var color = opts.color || '#7c5cff';
     var area = d + ' L' + pts[pts.length - 1][0].toFixed(1) + ' ' + (h - pad) + ' L' + pts[0][0].toFixed(1) + ' ' + (h - pad) + ' Z';
     return '<svg class="spark" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' +
       '<path d="' + area + '" fill="' + color + '" opacity="0.10"></path>' +
@@ -41,17 +41,17 @@
     var sx = function (i) { return L + (i / (pts.length - 1)) * (w - L - R); };
     var sy = function (v) { return T + (1 - (v - min) / (max - min)) * (h - T - B); };
     var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + sx(i).toFixed(1) + ' ' + sy(p.value).toFixed(1); }).join(' ');
-    var color = opts.color || '#2b5a9a';
+    var color = opts.color || '#7c5cff';
     var grid = [0, 1, 2, 3].map(function (k) {
       var v = min + (max - min) * (k / 3), y = sy(v);
-      return '<line x1="' + L + '" y1="' + y.toFixed(1) + '" x2="' + (w - R) + '" y2="' + y.toFixed(1) + '" stroke="#e6ebf2" stroke-width="1"></line>' +
-        '<text x="' + (L - 6) + '" y="' + (y + 3.5).toFixed(1) + '" text-anchor="end" font-size="10" fill="#8e9aa8">' + (Math.round(v * 10) / 10) + '</text>';
+      return '<line x1="' + L + '" y1="' + y.toFixed(1) + '" x2="' + (w - R) + '" y2="' + y.toFixed(1) + '" stroke="#eeecf7" stroke-width="1"></line>' +
+        '<text x="' + (L - 6) + '" y="' + (y + 3.5).toFixed(1) + '" text-anchor="end" font-size="10" fill="#9a97b0">' + (Math.round(v * 10) / 10) + '</text>';
     }).join('');
     var thrLine = (thr === undefined || thr === null) ? '' :
-      '<line x1="' + L + '" y1="' + sy(thr).toFixed(1) + '" x2="' + (w - R) + '" y2="' + sy(thr).toFixed(1) + '" stroke="#c0392b" stroke-width="1.2" stroke-dasharray="5 4"></line>' +
-      '<text x="' + (w - R) + '" y="' + (sy(thr) - 5).toFixed(1) + '" text-anchor="end" font-size="10" fill="#c0392b">阈值 ' + thr + '</text>';
+      '<line x1="' + L + '" y1="' + sy(thr).toFixed(1) + '" x2="' + (w - R) + '" y2="' + sy(thr).toFixed(1) + '" stroke="#e5484d" stroke-width="1.2" stroke-dasharray="5 4"></line>' +
+      '<text x="' + (w - R) + '" y="' + (sy(thr) - 5).toFixed(1) + '" text-anchor="end" font-size="10" fill="#e5484d">阈值 ' + thr + '</text>';
     var labels = [0, Math.floor((pts.length - 1) / 2), pts.length - 1].map(function (i) {
-      return '<text x="' + sx(i).toFixed(1) + '" y="' + (h - 8) + '" text-anchor="' + (i === 0 ? 'start' : (i === pts.length - 1 ? 'end' : 'middle')) + '" font-size="10" fill="#8e9aa8">' + escapeXml(String(pts[i].date)) + '</text>';
+      return '<text x="' + sx(i).toFixed(1) + '" y="' + (h - 8) + '" text-anchor="' + (i === 0 ? 'start' : (i === pts.length - 1 ? 'end' : 'middle')) + '" font-size="10" fill="#9a97b0">' + escapeXml(String(pts[i].date)) + '</text>';
     }).join('');
     var dots = pts.map(function (p, i) {
       return '<circle cx="' + sx(i).toFixed(1) + '" cy="' + sy(p.value).toFixed(1) + '" r="2.6" fill="#fff" stroke="' + color + '" stroke-width="1.6"><title>' + escapeXml(p.date + '：' + p.value) + '</title></circle>';
@@ -78,8 +78,8 @@
       acc = end;
     });
     return '<svg viewBox="0 0 ' + size + ' ' + size + '" width="' + size + '" height="' + size + '">' + parts.join('') +
-      '<text x="' + cx + '" y="' + (cy - 2) + '" text-anchor="middle" font-size="20" font-weight="700" fill="#222">' + total + '</text>' +
-      '<text x="' + cx + '" y="' + (cy + 16) + '" text-anchor="middle" font-size="11" fill="#8e9aa8">' + escapeXml(opts.centerLabel || '总条数') + '</text></svg>';
+      '<text x="' + cx + '" y="' + (cy - 2) + '" text-anchor="middle" font-size="20" font-weight="700" fill="#1c1b2e">' + total + '</text>' +
+      '<text x="' + cx + '" y="' + (cy + 16) + '" text-anchor="middle" font-size="11" fill="#9a97b0">' + escapeXml(opts.centerLabel || '总条数') + '</text></svg>';
   }
 
   function barRows(items) {

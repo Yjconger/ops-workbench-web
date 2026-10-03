@@ -1,4 +1,4 @@
-﻿/* app.js — 运营工作台 Web 版界面与交互 */
+/* app.js — 运营工作台 Web 版界面与交互 */
 (function () {
   'use strict';
   var S = window.OpsStore, E = window.OpsEngine, C = window.OpsCharts, D = window.OPSData;
@@ -105,15 +105,15 @@
 
   // ---------------- 页面：概览 ----------------
   var NAV = [
-    { id: 'dashboard', label: '概览', hint: '今天先做什么' },
-    { id: 'data', label: '数据', hint: '导入 / 导出' },
-    { id: 'check', label: '每日晨检', hint: '30 秒简报' },
-    { id: 'feedback', label: '反馈分析', hint: '情感 / 需求' },
-    { id: 'metrics', label: '指标分析', hint: '趋势 / 异常' },
-    { id: 'tags', label: '用户分层', hint: '三维标签' },
-    { id: 'integrated', label: '整合分析', hint: '交叉验证' },
-    { id: 'ledgers', label: '台账', hint: '历史留痕' },
-    { id: 'config', label: '口径设置', hint: '阈值 / 字典' }
+    { id: 'dashboard', label: '概览', hint: '今天先做什么', icon: '◎', group: '总览' },
+    { id: 'data', label: '数据', hint: '导入 / 导出', icon: '▤', group: '总览' },
+    { id: 'check', label: '每日晨检', hint: '30 秒简报', icon: '☼', group: '分析' },
+    { id: 'feedback', label: '反馈分析', hint: '情感 / 需求', icon: '✎', group: '分析' },
+    { id: 'metrics', label: '指标分析', hint: '趋势 / 异常', icon: '▲', group: '分析' },
+    { id: 'tags', label: '用户分层', hint: '三维标签', icon: '◈', group: '分析' },
+    { id: 'integrated', label: '整合分析', hint: '交叉验证', icon: '⊞', group: '分析' },
+    { id: 'ledgers', label: '台账', hint: '历史留痕', icon: '▦', group: '记录' },
+    { id: 'config', label: '口径设置', hint: '阈值 / 字典', icon: '⚙', group: '记录' }
   ];
 
   function viewDashboard() {
@@ -151,7 +151,9 @@
     ].join('');
   }
   function statCard(label, value, sub, tone) {
-    return '<div class="card stat ' + (tone || '') + '"><span class="stat-label">' + esc(label) + '</span><b>' + esc(value) + '</b><small>' + esc(sub) + '</small></div>';
+    var tn = tone || 'na';
+    return '<div class="card stat ' + tn + '"><span class="stat-label">' + esc(label) + '</span><b>' + esc(value) + '</b>' +
+      '<span class="stat-pill pill-' + tn + '">' + esc(sub) + '</span></div>';
   }
   function quickCard(title, desc, target, btn) {
     return '<div class="card quick"><h3>' + esc(title) + '</h3><p>' + esc(desc) + '</p>' +
@@ -272,7 +274,7 @@
       '</div>',
       '<div class="grid k2 mt">',
       '<div class="card"><h3>情感分布</h3><div class="donut-wrap">' +
-        C.donut([{ label: '负面', value: fb.sentiment['负面'], color: '#c0392b' }, { label: '中性', value: fb.sentiment['中性'], color: '#8e9aa8' }, { label: '正面', value: fb.sentiment['正面'], color: '#1f9d6f' }], { centerLabel: '反馈条数' }) +
+        C.donut([{ label: '负面', value: fb.sentiment['负面'], color: '#e5484d' }, { label: '中性', value: fb.sentiment['中性'], color: '#a2a0b8' }, { label: '正面', value: fb.sentiment['正面'], color: '#12a870' }], { centerLabel: '反馈条数' }) +
         '<div class="legend">' + ['负面', '中性', '正面'].map(function (k, i) {
           return '<span><i style="background:' + ['#c0392b', '#8e9aa8', '#1f9d6f'][i] + '"></i>' + k + ' ' + fb.sentiment[k] + '（' + fb.sentimentPct[k] + '%）</span>';
         }).join('') + '</div></div></div>',
@@ -568,21 +570,21 @@
       return '<tr><td>' + esc(r.metric) + '</td><td><b>' + esc(r.value) + '</b></td><td>' + (r.changePct === null ? '—' : signed(r.changePct, '%')) + '</td>' +
         '<td>' + esc(r.status) + '</td><td>' + C.sparkline(r.series.map(function (p) { return p.value; }), { color: C.STATUS_COLOR[r.status] }) + '</td></tr>';
     }).join('');
-    var chart = an.anomalies.length ? C.lineChart(an.anomalies[0].series, { threshold: an.anomalies[0].rule.better === 'up' ? an.anomalies[0].rule.warnMin : an.anomalies[0].rule.warnMax, color: '#c0392b', width: 760, height: 260 }) : '';
+    var chart = an.anomalies.length ? C.lineChart(an.anomalies[0].series, { threshold: an.anomalies[0].rule.better === 'up' ? an.anomalies[0].rule.warnMin : an.anomalies[0].rule.warnMax, color: '#e5484d', width: 760, height: 260 }) : '';
     return '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>运营指标看板 · ' + todayStr() + '</title>' +
-      '<style>body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:#eef1f5;color:#222;margin:0;padding:28px}' +
-      '.wrap{max-width:1000px;margin:0 auto}h1{font-size:22px;margin:0 0 4px}.sub{color:#666;font-size:13px;margin:0 0 20px}' +
-      '.card{background:#fff;border-radius:12px;padding:18px 20px;margin-bottom:16px;box-shadow:0 1px 2px rgba(31,45,61,.06),0 8px 24px rgba(31,45,61,.05)}' +
-      'table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 10px;border-bottom:1px solid #e6ebf2;text-align:left}' +
-      'th{color:#666;font-weight:600;background:#f7f9fc}h3{font-size:15px;margin:0 0 12px}.kpi{display:flex;gap:14px}.kpi div{flex:1;background:#fff;border-radius:12px;padding:14px 16px}' +
-      '.kpi b{display:block;font-size:22px;margin:2px 0}.kpi span{font-size:12px;color:#666}</style></head><body><div class="wrap">' +
+      '<style>body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:#f5f4fb;color:#1c1b2e;margin:0;padding:28px}' +
+      '.wrap{max-width:1000px;margin:0 auto}h1{font-size:23px;margin:0 0 4px;color:#1c1b2e}.sub{color:#7a7a92;font-size:13px;margin:0 0 20px}' +
+      '.card{background:#fff;border-radius:16px;padding:18px 22px;margin-bottom:16px;box-shadow:0 1px 2px rgba(28,27,46,.05),0 14px 30px -18px rgba(28,27,46,.18)}' +
+      'table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px 10px;border-bottom:1px solid #eeecf7;text-align:left}' +
+      'th{color:#a2a0b8;font-weight:600;text-transform:none}h3{font-size:15px;margin:0 0 12px}.kpi{display:flex;gap:14px}.kpi div{flex:1;background:#fff;border-radius:16px;padding:16px 18px;box-shadow:0 1px 2px rgba(28,27,46,.05)}' +
+      '.kpi b{display:block;font-size:26px;margin:2px 0;letter-spacing:-.02em}.kpi span{font-size:12px;color:#7a7a92}</style></head><body><div class="wrap">' +
       '<h1>运营指标看板</h1><p class="sub">生成时间 ' + new Date().toLocaleString('zh-CN') + '　·　粒度 ' + esc(an.granularity) + '　·　由运营工作台 Web 版导出</p>' +
       '<div class="kpi"><div><span>指标数</span><b>' + an.rows.length + '</b></div><div><span>异常</span><b>' + an.rows.filter(function (r) { return r.status === '异常'; }).length + '</b></div>' +
       '<div><span>需关注</span><b>' + an.rows.filter(function (r) { return r.status === '需关注'; }).length + '</b></div><div><span>连续趋势项</span><b>' + an.trends.length + '</b></div></div>' +
       (chart ? '<div class="card"><h3>重点异常走势：' + esc(an.anomalies[0].metric) + '</h3>' + chart + '</div>' : '') +
       '<div class="card"><h3>核心指标概览</h3><table><thead><tr><th>指标</th><th>当期</th><th>变化</th><th>状态</th><th>近 14 期</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
       '<div class="card"><h3>异常与归因假设</h3>' + (an.anomalies.length ? an.anomalies.map(function (r) {
-        return '<p><b>' + esc(r.metric) + ' ' + esc(r.value) + '（' + esc(r.status) + '）</b><br><span style="color:#666;font-size:12px">' +
+        return '<p><b>' + esc(r.metric) + ' ' + esc(r.value) + '（' + esc(r.status) + '）</b><br><span style="color:#7a7a92;font-size:12px">' +
           (r.hypothesis || []).map(function (h) { return esc(h.text); }).join('；') + '</span></p>';
       }).join('') : '<p>本期无异常</p>') + '</div></div></body></html>';
   }
@@ -727,8 +729,12 @@
   function render() {
     var nav = $('#nav');
     if (nav) {
+      var navGroup = '';
       nav.innerHTML = NAV.map(function (n) {
-        return '<button class="nav-item' + (view === n.id ? ' on' : '') + '" data-act="go" data-view="' + n.id + '"><b>' + esc(n.label) + '</b><small>' + esc(n.hint) + '</small></button>';
+        var head = '';
+        if (n.group !== navGroup) { head = '<div class="nav-group">' + esc(n.group) + '</div>'; navGroup = n.group; }
+        return head + '<button class="nav-item' + (view === n.id ? ' on' : '') + '" data-act="go" data-view="' + n.id + '">' +
+          '<span class="nav-ico">' + n.icon + '</span><span class="nav-txt"><b>' + esc(n.label) + '</b><small>' + esc(n.hint) + '</small></span></button>';
       }).join('');
     }
     var box = $('#view');
@@ -794,9 +800,37 @@
     else if (act === 'tag-search') { ui.search = t.value; render(); refocus('[data-act="tag-search"]'); }
     else if (act === 'ledger-search') { ui.search = t.value; render(); refocus('[data-act="ledger-search"]'); }
   }
+  function filterNav(q) {
+    var s = String(q || '').trim().toLowerCase();
+    var items = document.querySelectorAll('#nav .nav-item');
+    var groups = document.querySelectorAll('#nav .nav-group');
+    for (var i = 0; i < items.length; i++) {
+      var txt = (items[i].textContent || '').toLowerCase();
+      var show = !s || txt.indexOf(s) >= 0;
+      items[i].classList[show ? 'remove' : 'add']('off');
+    }
+    for (var g = 0; g < groups.length; g++) { groups[g].style.display = s ? 'none' : ''; }
+  }
   function init() {
     var nt = document.getElementById('navToggle');
     if (nt) { nt.addEventListener('click', function () { var sb = document.getElementById('sidebar'); if (sb) { sb.classList.toggle('open'); } }); }
+    var rf = document.getElementById('topRefresh');
+    if (rf) { rf.addEventListener('click', function () { ui.last = {}; render(); toast('已刷新'); }); }
+    var bl = document.getElementById('topBell');
+    if (bl) { bl.addEventListener('click', function () { go('check'); }); }
+    var gs = document.getElementById('globalSearch');
+    if (gs) {
+      gs.addEventListener('input', function () { filterNav(gs.value); });
+      gs.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          var first = document.querySelector('#nav .nav-item:not(.off)');
+          if (first) { go(first.getAttribute('data-view')); gs.value = ''; filterNav(''); }
+        } else if (e.key === 'Escape') { gs.value = ''; filterNav(''); }
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(e.target.tagName || '')) { e.preventDefault(); gs.focus(); }
+      });
+    }
     document.addEventListener('click', onClick);
     document.addEventListener('change', onChange);
     document.addEventListener('input', onInput);
