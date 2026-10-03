@@ -1,0 +1,12 @@
+# 本地/系统垃圾
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# 编辑器
+.vscode/
+.idea/
+
+# 导出物与临时文件
+output/
+*.tmp

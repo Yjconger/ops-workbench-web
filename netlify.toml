@@ -1,0 +1,4 @@
+# Netlify：直接连仓库或用 `netlify deploy --dir=src`，本文件让默认发布目录指向 src
+[build]
+  publish = "src"
+  command = ""

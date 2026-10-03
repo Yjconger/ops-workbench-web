@@ -1,0 +1,38 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>运营分析工作台 · Web 版</title>
+<meta name="description" content="在浏览器里完成运营日常分析：每日晨检、反馈分析、指标分析、用户分层、整合交叉验证。数据只保存在本机。">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">运</span>
+    <div><b>运营分析工作台</b><small>Web 版 · 数据只保存在本机浏览器</small></div>
+  </div>
+  <div class="status" id="statusBar"></div>
+  <button class="nav-toggle" id="navToggle" aria-label="展开菜单">☰</button>
+</header>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <nav id="nav"></nav>
+    <div class="side-foot">
+      <button class="btn ghost sm" data-act="export-all">导出工作区</button>
+      <button class="btn ghost sm" data-act="load-sample">载入示例数据</button>
+    </div>
+  </aside>
+  <main class="main" id="view"></main>
+</div>
+<div class="toast" id="toast"></div>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/engine.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/llm.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
