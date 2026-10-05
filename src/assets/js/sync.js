@@ -84,17 +84,20 @@
     return man;
   }
 
-  /** 差异：返回需要下载的文件（新增 + 内容变更） */
+  /** 差异：返回需要下载的文件（新增 + 内容变更）
+   *  被「手动导入」占用的 日期/周期 单列到 locked，既不下载也不覆盖（手动数据优先级最高） */
   function plan(man) {
     var c = config();
-    var fresh = [], changed = [], skipped = 0;
+    var fresh = [], changed = [], skipped = 0, locked = [];
     man.files.forEach(function (f) {
+      var key = f.date || f.period || '';
+      if (S.isManualLocked && S.isManualLocked(f.kind, key)) { locked.push(f); return; }
       var seen = c.files[f.id];
       if (!seen) { fresh.push(f); }
       else if (seen.sha256 !== f.sha256) { changed.push(f); }
       else { skipped++; }
     });
-    return { fresh: fresh, changed: changed, unchanged: skipped, todo: fresh.concat(changed) };
+    return { fresh: fresh, changed: changed, unchanged: skipped, locked: locked, todo: fresh.concat(changed) };
   }
 
   function parseByKind(kind, text, date) {
@@ -105,11 +108,12 @@
     throw new Error('未知数据类型：' + kind);
   }
 
-  function apply(kind, rows) {
-    if (kind === 'daily') { return S.addDaily(rows); }
-    if (kind === 'feedback') { return S.addFeedback(rows); }
-    if (kind === 'weekly') { return S.addWeekly(rows); }
-    if (kind === 'users') { return S.addUsers(rows); }
+  /** 自动同步一律以 auto 级写入：手动导入（manual）的数据优先级更高，不会被覆盖 */
+  function apply(kind, rows, key) {
+    if (kind === 'daily') { return S.addDaily(rows, 'auto', key); }
+    if (kind === 'feedback') { return S.addFeedback(rows, 'auto', key); }
+    if (kind === 'weekly') { return S.addWeekly(rows, 'auto', key); }
+    if (kind === 'users') { return S.addUsers(rows, 'auto', key); }
     return 0;
   }
 
@@ -136,7 +140,7 @@
     var c = config();
     var base = resolveBase(opts.baseUrl || c.baseUrl);
     var at = new Date().toISOString();
-    var result = { ok: false, at: at, base: base, newFiles: 0, changed: 0, rows: 0, unchanged: 0, message: '', dryRun: !!opts.dryRun };
+    var result = { ok: false, at: at, base: base, newFiles: 0, changed: 0, rows: 0, unchanged: 0, locked: 0, message: '', dryRun: !!opts.dryRun };
     var man;
     return getJSON(base + 'manifest.json').then(function (m) {
       man = validate(m);
@@ -144,14 +148,16 @@
       result.unchanged = p.unchanged;
       result.newFiles = p.fresh.length;
       result.changed = p.changed.length;
+      result.locked = p.locked.length;
+      var lockNote = p.locked.length ? ('；' + p.locked.length + ' 个文件被手动导入的数据锁定，未覆盖') : '';
       if (opts.dryRun) {
         result.ok = true;
-        result.message = p.todo.length ? ('有 ' + p.todo.length + ' 个文件待同步') : '已是最新';
+        result.message = (p.todo.length ? ('有 ' + p.todo.length + ' 个文件待同步') : '已是最新') + lockNote;
         return result;
       }
       if (!p.todo.length) {
         result.ok = true;
-        result.message = '已是最新，无需下载';
+        result.message = '已是最新，无需下载' + lockNote;
         result.source = man.source || '';
         result.dataVersion = man.generatedAt || '';
         return finish(result);
@@ -163,7 +169,7 @@
             return r.text();
           }).then(function (text) {
             var parsed = parseByKind(f.kind, text, f.date || '');
-            apply(f.kind, parsed.rows);
+            apply(f.kind, parsed.rows, f.date || f.period || '');
             var cc = config();
             cc.files[f.id] = { sha256: f.sha256, at: new Date().toISOString(), rows: parsed.rows.length };
             result.rows += parsed.rows.length;
@@ -171,7 +177,7 @@
         });
       }, Promise.resolve()).then(function () {
         result.ok = true;
-        result.message = '同步完成：' + (result.newFiles + result.changed) + ' 个文件 / ' + result.rows + ' 条记录';
+        result.message = '同步完成：' + (result.newFiles + result.changed) + ' 个文件 / ' + result.rows + ' 条记录' + lockNote;
         result.source = man.source || '';
         result.dataVersion = man.generatedAt || '';
         return finish(result);

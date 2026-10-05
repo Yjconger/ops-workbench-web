@@ -67,6 +67,9 @@ globalThis.fetch = function (url) {
 
 const SY = require(path.join(JS, 'sync.js'));
 const BASE = 'http://localhost/ops-workbench-web/data/';
+// 第 4 步（手动优先）会被后续多个 then 复用，声明在模块作用域
+let LOCK_DATE = '2026-10-03';
+let autoValue = null;
 
 ok(/\/data\/$/.test(SY.resolveBase('data/')) || SY.resolveBase('data/').indexOf('data/') >= 0, '相对地址可解析');
 eq(SY.resolveBase('https://cdn.example.com/ops-data'), 'https://cdn.example.com/ops-data/', '绝对地址补尾斜杠');
@@ -124,6 +127,49 @@ SY.run({}).then(function (r) {
 
   const s = S.summary();
   eq(s.dailyDates.length, 14, '重复同步不会产生重复记录（按 日期+指标 覆盖）');
+
+  // ---------- 4. 手动导入优先级最高（不会被自动同步覆盖） ----------
+  console.log('手动优先');
+  LOCK_DATE = '2026-10-03';
+  const baseline = S.state().daily.filter(function (r) { return r.date === LOCK_DATE && r.metric === '日活跃用户数'; })[0];
+  ok(!!baseline, '自动同步已入库基线数据');
+  autoValue = baseline ? baseline.value : null;
+  eq(baseline._src, 'auto', '自动记录带 auto 来源标记');
+
+  // 手动导入同一天的同名指标（值刻意不同），模拟"运营手工补/改数"
+  S.addDaily([{ date: LOCK_DATE, metric: '日活跃用户数', value: 99999, compare: null, basis: '' }], 'manual', LOCK_DATE);
+  const manualRow = S.state().daily.filter(function (r) { return r.date === LOCK_DATE && r.metric === '日活跃用户数'; })[0];
+  eq(manualRow.value, 99999, '手动导入的值已写入');
+  eq(manualRow._src, 'manual', '手动记录带 manual 来源标记');
+  ok(S.isManualLocked('daily', LOCK_DATE), '该日期被标记为手动优先');
+  eq(S.summary().lockedTotal, 1, '手动优先项计入统计');
+
+  return SY.run({});
+}).then(function (r5) {
+  ok(r5.ok, '存在手动数据时同步仍成功');
+  eq(r5.locked, 1, '被手动锁定的 1 个文件被跳过（不下载、不覆盖）');
+  eq(r5.unchanged, published.files.length - 1, '其余文件照常按哈希命中');
+  ok(r5.message.indexOf('手动') >= 0, '同步结果里说明了手动锁定：' + r5.message);
+  const row = S.state().daily.filter(function (r) { return r.date === LOCK_DATE && r.metric === '日活跃用户数'; })[0];
+  eq(row.value, 99999, '★ 自动同步没有覆盖手动导入的值');
+  eq(row._src, 'manual', '来源仍是 manual');
+
+  // ---------- 5. 解除手动优先后，自动数据能重新盖回来 ----------
+  const unlocked = S.unlockManual('all');
+  eq(unlocked, 1, '解除 1 项手动优先');
+  ok(!S.isManualLocked('daily', LOCK_DATE), '解锁后不再锁定');
+  eq(S.summary().lockedTotal, 0, '解锁后锁定统计归零');
+  eq(Object.keys(SY.config().files || {}).length, 0, '解锁同时清空哈希缓存（否则会判定"无变化"而拒绝下载）');
+
+  return SY.run({});
+}).then(function (r6) {
+  ok(r6.ok, '解锁后同步成功');
+  eq(r6.locked, 0, '解锁后没有文件被跳过');
+  eq(r6.newFiles, published.files.length, '解锁后重新下载全部数据文件');
+  const row = S.state().daily.filter(function (r) { return r.date === LOCK_DATE && r.metric === '日活跃用户数'; })[0];
+  eq(row.value, autoValue, '★ 解锁后自动数据恢复覆盖手动值');
+  eq(row._src, 'auto', '来源变回 auto');
+  eq(S.summary().dailyDates.length, 14, '解锁重下后仍是 14 天，没有重复');
 
   console.log('\nSUMMARY | pass=' + pass + ' fail=' + fail);
   process.exit(fail ? 1 : 0);

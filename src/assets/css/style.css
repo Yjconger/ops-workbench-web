@@ -223,3 +223,5 @@ details.logbox>summary::before{content:'▸ '}
 details.logbox[open]>summary::before{content:'▾ '}
 .sec-h{margin:18px 0 10px;font-size:14px;font-weight:600;color:var(--ink)}
 .sync-card{border-color:var(--pri-line);background:linear-gradient(180deg,var(--pri-soft) 0%,#fff 42%)}
+.lockbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;padding:9px 12px;border-radius:12px;background:var(--warn-soft);border:1px solid var(--warn-line)}
+.lockbar .btn{margin-left:auto}

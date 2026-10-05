@@ -1,4 +1,4 @@
-﻿/* smoke.js — 浏览器端到端冒烟测试（开发用，不参与线上页面）
+/* smoke.js — 浏览器端到端冒烟测试（开发用，不参与线上页面）
    用法：在 src 目录起静态服务器后，用浏览器打开 tests/smoke.html 或 tests/smoke.html：
    页面会把 PASS/FAIL 清单写入 <pre id="smokeResult"> 与 document.title（SMOKE_OK / SMOKE_FAIL_n）。 */
 (function () {
@@ -164,6 +164,28 @@
     click(q('#nav [data-view="config"]'));
     ok('口径页有指标表格', qa('#view table.tbl.cfg tbody tr').length === 11, 'n=' + qa('#view table.tbl.cfg tbody tr').length);
     ok('口径页有反馈词表', html('#view').indexOf('反馈') >= 0);
+
+    // 13. 手动导入优先级最高（手动数据不被自动同步覆盖）
+    var lockDate = window.OpsStore.summary().dailyDates[0];
+    window.OpsStore.addDaily([{ date: lockDate, metric: '日活跃用户数', value: 12345, compare: null, basis: '' }], 'manual', lockDate);
+    var ml = window.OpsStore.state().daily.filter(function (r) { return r.date === lockDate && r.metric === '日活跃用户数'; })[0];
+    ok('手动导入标记为 manual 来源', !!ml && ml._src === 'manual', ml ? String(ml._src) : 'none');
+    ok('手动导入的值生效（覆盖已有数据）', !!ml && ml.value === 12345, ml ? String(ml.value) : 'none');
+    ok('该日期被锁定为手动优先', window.OpsStore.isManualLocked('daily', lockDate) === true, lockDate);
+    ok('锁定计入 summary.lockedTotal', window.OpsStore.summary().lockedTotal === 1, 'n=' + window.OpsStore.summary().lockedTotal);
+
+    click(q('#nav [data-view="data"]'));
+    var dv = html('#view');
+    ok('数据源页出现「手动优先」提示条', dv.indexOf('手动优先') >= 0);
+    ok('提示条列出被占用的日期', dv.indexOf(lockDate) >= 0, lockDate);
+    ok('数据源页有解除锁定按钮', qa('#view [data-act="sync-unlock"]').length === 1, 'n=' + qa('#view [data-act="sync-unlock"]').length);
+
+    var unlocked = window.OpsStore.unlockManual('daily');
+    ok('解除手动优先返回 1 项', unlocked === 1, 'n=' + unlocked);
+    ok('解除后不再锁定', window.OpsStore.isManualLocked('daily', lockDate) === false);
+    ok('解除后记录降级为 auto', window.OpsStore.state().daily.filter(function (r) { return r.date === lockDate && r.metric === '日活跃用户数'; })[0]._src === 'auto');
+    click(q('#nav [data-view="data"]'));
+    ok('解除后提示条消失', html('#view').indexOf('手动优先') < 0);
   }
 
   function finish() {

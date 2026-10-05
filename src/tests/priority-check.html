@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>priority-check</title>
+<style>
+body{font:13px/1.6 monospace;padding:16px;background:#111;color:#ddd}
+h3{color:#9cf}p{color:#fa6;font-weight:700}
+</style></head>
+<body>
+<h3>[OK] 手动导入优先于自动同步 · 真实 HTTP 集成检查</h3>
+<p>⚠ 本页是开发自检页：会清空本浏览器的工作区 localStorage 数据，正式使用时请勿打开。</p>
+<div id="out">running…</div>
+<pre id="json" style="color:#8c8"></pre>
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/engine.js"></script>
+<script src="../assets/js/store.js"></script>
+<script src="../assets/js/charts.js"></script>
+<script src="../assets/js/llm.js"></script>
+<script src="../assets/js/sync.js"></script>
+<script>
+(function () {
+  'use strict';
+  var S = window.OpsStore, SY = window.OpsSync;
+  var out = [], json = {};
+  try { localStorage.removeItem('ops-workbench-web-v1'); } catch (e) {}
+  S.reset();
+  try { localStorage.removeItem('ops-workbench-web-v1'); } catch (e) {}
+  SY.setConfig({ baseUrl: '../data/', auto: false });   // 本页在 /tests/ 下，指到站点根的 data/
+  SY.forget();
+
+  var DATE = '2026-10-03', METRIC = '日活跃用户数', MANUAL = 88888;
+  function row() {
+    return S.state().daily.filter(function (r) { return r.date === DATE && r.metric === METRIC; })[0];
+  }
+
+  SY.run({}).then(function (r1) {
+    json.sync1 = { ok: r1.ok, newFiles: r1.newFiles, rows: r1.rows, message: r1.message };
+    json.autoBefore = row() && row().value;
+    S.addDaily([{ date: DATE, metric: METRIC, value: MANUAL, compare: null, basis: '' }], 'manual', DATE);
+    json.manualAfterImport = row() && row().value;
+    json.srcAfterImport = row() && row()._src;
+    json.lockedFlag = S.isManualLocked('daily', DATE);
+    return SY.run({});
+  }).then(function (r2) {
+    json.sync2 = { ok: r2.ok, locked: r2.locked, unchanged: r2.unchanged, message: r2.message };
+    json.valueAfterSync2 = row() && row().value;
+    json.srcAfterSync2 = row() && row()._src;
+    json.summaryLocked = S.summary().lockedTotal;
+    var n = S.unlockManual('all');
+    json.unlocked = n;
+    json.filesCacheAfterUnlock = Object.keys(SY.config().files || {}).length;
+    return SY.run({});
+  }).then(function (r3) {
+    json.sync3 = { ok: r3.ok, newFiles: r3.newFiles, locked: r3.locked };
+    json.valueAfterUnlock = row() && row().value;
+    json.srcAfterUnlock = row() && row()._src;
+
+    var checks = [
+      ['第一次同步成功', json.sync1.ok === true],
+      ['自动数据已入库', typeof json.autoBefore === 'number' && json.autoBefore > 0],
+      ['手动导入生效（值=' + MANUAL + '）', json.manualAfterImport === MANUAL],
+      ['记录标记为 manual', json.srcAfterImport === 'manual'],
+      ['该日期被锁定', json.lockedFlag === true],
+      ['第二次同步跳过 1 个文件', json.sync2.locked === 1],
+      ['★ 自动同步没有覆盖手动值', json.valueAfterSync2 === MANUAL],
+      ['★ 来源仍是 manual', json.srcAfterSync2 === 'manual'],
+      ['同步消息说明了手动锁定', String(json.sync2.message).indexOf('手动') >= 0],
+      ['解锁返回 1 项', json.unlocked === 1],
+      ['解锁清空哈希缓存', json.filesCacheAfterUnlock === 0],
+      ['解锁后重新下载全部', json.sync3.newFiles > 0 && json.sync3.locked === 0],
+      ['★ 解锁后自动数据恢复', json.valueAfterUnlock === json.autoBefore],
+      ['解锁后来源变回 auto', json.srcAfterUnlock === 'auto']
+    ];
+    var failed = 0;
+    checks.forEach(function (c) {
+      out.push((c[1] ? 'PASS' : 'FAIL') + ' | ' + c[0]);
+      if (!c[1]) { failed++; }
+    });
+    out.push('SUMMARY | total=' + checks.length + ' failed=' + failed);
+    document.getElementById('out').innerHTML = out.map(function (l) {
+      return l.indexOf('FAIL') === 0 ? '<p>' + l + '</p>' : l;
+    }).join('<br>');
+    document.getElementById('json').textContent = JSON.stringify(json, null, 1);
+    document.title = failed ? 'PRIORITY_FAIL_' + failed : 'PRIORITY_OK';
+  }).catch(function (e) {
+    document.getElementById('out').textContent = 'EXCEPTION: ' + e.message + '\n' + e.stack;
+    document.title = 'PRIORITY_EXCEPTION';
+  });
+})();
+</script>
+</body></html>

@@ -164,9 +164,9 @@
   function viewData() {
     var s = summary();
     return [
-      '<div class="page-head"><h1>数据源</h1><p class="sub">后台采集好的数据会自动同步进来，正常情况下不需要手动上传；下面的手动导入只在网络不通或临时补数时使用。</p></div>',
+      '<div class="page-head"><h1>数据源</h1><p class="sub">后台采集好的数据会自动同步进来；下面保留了手动导入，且<b>手动导入的数据优先级最高</b> —— 同一个日期既有手动又有自动数据时以手动为准，自动同步不会覆盖它。</p></div>',
       syncCard(),
-      '<h3 class="sec-h">手动导入（兜底）</h3>',
+      '<h3 class="sec-h">手动导入（优先级最高）</h3>',
       '<div class="grid k2">',
       importCard('daily', '日指标 CSV', '文件名如 2026-10-03-metrics.csv；表头：指标,数值,对比值,对比口径', s.dailyRows ? s.dailyDates.length + ' 天 / ' + s.dailyRows + ' 行' : '未导入'),
       importCard('feedback', '用户反馈 TXT', '一行一条：时间 | 渠道 | 用户ID | 内容；# 开头为注释', s.feedback ? s.feedback + ' 条 / ' + s.feedbackDates.length + ' 天' : '未导入'),
@@ -189,6 +189,20 @@
     ].join('');
   }
   // ---------------- 数据源：自动同步 ----------------
+  /** 手动优先锁定提示条：列出被手动数据占用的 日期/周期 */
+  function lockBar() {
+    var s = summary();
+    if (!s.lockedTotal) { return ''; }
+    var label = { daily: '日指标', weekly: '周指标', users: '用户', feedback: '反馈' };
+    var parts = [];
+    ['daily', 'weekly', 'users', 'feedback'].forEach(function (k) {
+      var ks = (s.locks && s.locks[k]) || [];
+      if (ks.length) { parts.push(label[k] + ' ' + ks.join('、')); }
+    });
+    return '<div class="lockbar"><span class="chip warn">手动优先 ' + s.lockedTotal + ' 项</span>' +
+      '<span class="muted sm">' + esc(parts.join('；')) + ' 已被手动导入的数据占用，自动同步会跳过这些文件，不会覆盖。</span>' +
+      '<button class="btn tiny ghost" data-act="sync-unlock">解除手动优先</button></div>';
+  }
   function syncCard() {
     var c = SY ? SY.config() : { baseUrl: 'data/', auto: false, files: {}, last: null, log: [] };
     var last = c.last;
@@ -201,6 +215,7 @@
     }).join('');
     return '<div class="card mt sync-card"><div class="card-head"><h3>数据源 · 自动同步</h3>' + badge + '</div>' +
       '<p class="muted sm">后台每日采集完成后，打开本页会自动拉取新增 / 变更的数据文件并入库，<b>不需要手动上传</b>。默认读取本站 <span class="mono">data/</span> 目录，也可以指向后台或对象存储的地址（需允许跨域）。同步按文件内容哈希比对，已同步过的文件不会重复下载。</p>' +
+      lockBar() +
       '<div class="row"><input class="sync-url" type="text" data-input="sync-source" value="' + esc(c.baseUrl) + '" placeholder="data/ 或 https://example.com/ops-data/">' +
       '<button class="btn sm" data-act="sync-source-save">保存地址</button>' +
       '<button class="btn sm primary" data-act="sync-now">立即同步</button>' +
@@ -663,13 +678,15 @@
       fr.onload = function () {
         var text = String(fr.result);
         var date = (f.name.match(/\d{4}-\d{2}-\d{2}/) || [])[0] || todayStr();
+        var period = (f.name.match(/\d{4}-\d{2}/) || [])[0] || '';
         try {
-          if (kind === 'daily') { added += S.addDaily(E.parseDailyCSV(text, date)); }
-          else if (kind === 'weekly') { added += S.addWeekly(E.parseWeeklyCSV(text)); }
-          else if (kind === 'users') { added += S.addUsers(E.parseUsersCSV(text)); }
-          else if (kind === 'feedback') { added += S.addFeedback(E.parseFeedbackTXT(text, date)); }
+          // 手动导入以 manual 级写入：优先级高于自动同步，占用的日期/周期会被锁定
+          if (kind === 'daily') { added += S.addDaily(E.parseDailyCSV(text, date), 'manual', date); }
+          else if (kind === 'weekly') { added += S.addWeekly(E.parseWeeklyCSV(text), 'manual'); }
+          else if (kind === 'users') { added += S.addUsers(E.parseUsersCSV(text), 'manual', period); }
+          else if (kind === 'feedback') { added += S.addFeedback(E.parseFeedbackTXT(text, date), 'manual', date); }
         } catch (e) { toast('解析失败：' + f.name); }
-        if (++n === total) { toast('已导入 ' + added + ' 条'); render(); }
+        if (++n === total) { toast(added ? ('已导入 ' + added + ' 条（手动数据优先，自动同步不会覆盖）') : '没有解析到有效数据'); render(); }
       };
       fr.readAsText(f, 'UTF-8');
     });
@@ -680,12 +697,13 @@
     var text = ta.value.trim();
     var date = todayStr();
     var added = 0;
-    if (kind === 'daily') { added = S.addDaily(E.parseDailyCSV(text, date)); }
-    else if (kind === 'weekly') { added = S.addWeekly(E.parseWeeklyCSV(text)); }
-    else if (kind === 'users') { added = S.addUsers(E.parseUsersCSV(text)); }
-    else if (kind === 'feedback') { added = S.addFeedback(E.parseFeedbackTXT(text, date)); }
+    // 同样以 manual 级写入（手动数据优先）
+    if (kind === 'daily') { added = S.addDaily(E.parseDailyCSV(text, date), 'manual', date); }
+    else if (kind === 'weekly') { added = S.addWeekly(E.parseWeeklyCSV(text), 'manual'); }
+    else if (kind === 'users') { added = S.addUsers(E.parseUsersCSV(text), 'manual'); }
+    else if (kind === 'feedback') { added = S.addFeedback(E.parseFeedbackTXT(text, date), 'manual', date); }
     ta.value = '';
-    toast(added ? '已导入 ' + added + ' 条' : '没有解析到有效数据，请检查表头与分隔符');
+    toast(added ? '已导入 ' + added + ' 条（手动数据优先，自动同步不会覆盖）' : '没有解析到有效数据，请检查表头与分隔符');
     render();
   }
   function saveConfig() {
@@ -799,6 +817,12 @@
     else if (act === 'sync-now') { doSync(false); }
     else if (act === 'sync-check') { doSync(true); }
     else if (act === 'sync-source-save') { var su = $('[data-input="sync-source"]'); var sv = (su && su.value.trim()) ? su.value.trim() : 'data/'; SY.setConfig({ baseUrl: sv }); toast('数据源地址已保存：' + sv); render(); }
+    else if (act === 'sync-unlock') {
+      if (!window.confirm('解除手动优先？解除后这些日期/周期的数据将重新以自动同步为准（立刻重新同步一次会覆盖它们）。')) { return; }
+      var unlocked = S.unlockManual('all');
+      toast(unlocked ? ('已解除 ' + unlocked + ' 项手动优先，正在重新同步…') : '没有需要解除的手动数据');
+      if (unlocked) { doSync(false); } else { render(); }
+    }
     else if (act === 'sync-forget') { if (window.confirm('清空同步记录？下次同步会重新下载全部文件（已入库的数据不受影响）。')) { SY.forget(); toast('已清空同步记录'); render(); } }
     else if (act === 'load-sample') { S.loadSample(); toast('示例数据已载入'); view = 'dashboard'; render(); }
     else if (act === 'clear') {
