@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "generatedAt": "2026-10-05T12:19:57.466Z",
-  "generator": "build-demo-source.cjs@1.0",
-  "source": "产品后台 API（演示数据）",
+  "generatedAt": "2026-10-05T23:03:13.347Z",
+  "generator": "manifest.cjs@1.0",
+  "source": "产品后台（示例配置，尚未启用）",
   "basePath": "data/",
   "counts": {
     "daily": 14,
