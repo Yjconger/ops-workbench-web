@@ -1,0 +1,219 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-10-05T12:19:57.466Z",
+  "generator": "build-demo-source.cjs@1.0",
+  "source": "产品后台 API（演示数据）",
+  "basePath": "data/",
+  "counts": {
+    "daily": 14,
+    "feedback": 2,
+    "weekly": 1,
+    "users": 1
+  },
+  "latest": {
+    "daily": "2026-10-03",
+    "feedback": "2026-10-03",
+    "weekly": "2026-W40",
+    "users": "2026-10"
+  },
+  "files": [
+    {
+      "id": "daily/2026-09-20-metrics.csv",
+      "kind": "daily",
+      "name": "2026-09-20-metrics.csv",
+      "path": "daily/2026-09-20-metrics.csv",
+      "date": "2026-09-20",
+      "period": "",
+      "bytes": 330,
+      "rows": 9,
+      "sha256": "2316103e5a6ec052a81cfc328413ebc7bfc79356269f1784d3f789b5c16340ae"
+    },
+    {
+      "id": "daily/2026-09-21-metrics.csv",
+      "kind": "daily",
+      "name": "2026-09-21-metrics.csv",
+      "path": "daily/2026-09-21-metrics.csv",
+      "date": "2026-09-21",
+      "period": "",
+      "bytes": 362,
+      "rows": 9,
+      "sha256": "2167597f3a142aac637f77859537e9eb239ce522bf6cbb610300ba72d0fdd253"
+    },
+    {
+      "id": "daily/2026-09-22-metrics.csv",
+      "kind": "daily",
+      "name": "2026-09-22-metrics.csv",
+      "path": "daily/2026-09-22-metrics.csv",
+      "date": "2026-09-22",
+      "period": "",
+      "bytes": 362,
+      "rows": 9,
+      "sha256": "a3b087fd7e0d4e95567c5c900ff18419d20f0ac07a2a9de35883e520f7f11cf9"
+    },
+    {
+      "id": "daily/2026-09-23-metrics.csv",
+      "kind": "daily",
+      "name": "2026-09-23-metrics.csv",
+      "path": "daily/2026-09-23-metrics.csv",
+      "date": "2026-09-23",
+      "period": "",
+      "bytes": 362,
+      "rows": 9,
+      "sha256": "c7803981ce13ec375668ddda4fd7e5434efa175e574266e56619b785361c1a4a"
+    },
+    {
+      "id": "daily/2026-09-24-metrics.csv",
+      "kind": "daily",
+      "name": "2026-09-24-metrics.csv",
+      "path": "daily/2026-09-24-metrics.csv",
+      "date": "2026-09-24",
+      "period": "",
+      "bytes": 362,
+      "rows": 9,
+      "sha256": "92dbbd9f8b25a4a1a0e9f83d40b1865f2b93665276caf053fd9bd9c3e8d3b57f"
+    },
+    {
+      "id": "daily/2026-09-25-metrics.csv",
+      "kind": "daily",
+      "name": "2026-09-25-metrics.csv",
+      "path": "daily/2026-09-25-metrics.csv",
+      "date": "2026-09-25",
+      "period": "",
+      "bytes": 361,
+      "rows": 9,
+      "sha256": "a846c3fa716cba644d42277cf7fc87a64094f79352572a527e83bba17962dcc9"
+    },
+    {
+      "id": "daily/2026-09-26-metrics.csv",
+      "kind": "daily",
+      "name": "2026-09-26-metrics.csv",
+      "path": "daily/2026-09-26-metrics.csv",
+      "date": "2026-09-26",
+      "period": "",
+      "bytes": 361,
+      "rows": 9,
+      "sha256": "7deeef3d9bef502b32fee7fb94055d18d8f105e9d5bbb572395a462f30324ddd"
+    },
+    {
+      "id": "daily/2026-09-27-metrics.csv",
+      "kind": "daily",
+      "name": "2026-09-27-metrics.csv",
+      "path": "daily/2026-09-27-metrics.csv",
+      "date": "2026-09-27",
+      "period": "",
+      "bytes": 362,
+      "rows": 9,
+      "sha256": "a1197d88c19c6ea561453d977e3a88f887a49a2e8b71dd307ac0fb7ba3a530b7"
+    },
+    {
+      "id": "daily/2026-09-28-metrics.csv",
+      "kind": "daily",
+      "name": "2026-09-28-metrics.csv",
+      "path": "daily/2026-09-28-metrics.csv",
+      "date": "2026-09-28",
+      "period": "",
+      "bytes": 362,
+      "rows": 9,
+      "sha256": "58d3cc097ffa9b6478718829cec4a7466e25e98909008a2bcb83e6df32578f05"
+    },
+    {
+      "id": "daily/2026-09-29-metrics.csv",
+      "kind": "daily",
+      "name": "2026-09-29-metrics.csv",
+      "path": "daily/2026-09-29-metrics.csv",
+      "date": "2026-09-29",
+      "period": "",
+      "bytes": 358,
+      "rows": 9,
+      "sha256": "efe507b9c736c25144c96bff555824d4d6f2e6c6b5579262c0e80aeaacf1ad7d"
+    },
+    {
+      "id": "daily/2026-09-30-metrics.csv",
+      "kind": "daily",
+      "name": "2026-09-30-metrics.csv",
+      "path": "daily/2026-09-30-metrics.csv",
+      "date": "2026-09-30",
+      "period": "",
+      "bytes": 358,
+      "rows": 9,
+      "sha256": "1d2deecce0981f36772a0f031db3a7253ba0d480bb133fc230adb87c80cfb232"
+    },
+    {
+      "id": "daily/2026-10-01-metrics.csv",
+      "kind": "daily",
+      "name": "2026-10-01-metrics.csv",
+      "path": "daily/2026-10-01-metrics.csv",
+      "date": "2026-10-01",
+      "period": "",
+      "bytes": 363,
+      "rows": 9,
+      "sha256": "5b7a7ee5412e5f5dba10ce5d7252b65218524a9abeba7336f76029ee057cbcd0"
+    },
+    {
+      "id": "daily/2026-10-02-feedback.txt",
+      "kind": "feedback",
+      "name": "2026-10-02-feedback.txt",
+      "path": "daily/2026-10-02-feedback.txt",
+      "date": "2026-10-02",
+      "period": "",
+      "bytes": 831,
+      "rows": 9,
+      "sha256": "8266dd70eb91a6601c899070082ddbefd8a760e124b21e9db80c6fadba5c8613"
+    },
+    {
+      "id": "daily/2026-10-02-metrics.csv",
+      "kind": "daily",
+      "name": "2026-10-02-metrics.csv",
+      "path": "daily/2026-10-02-metrics.csv",
+      "date": "2026-10-02",
+      "period": "",
+      "bytes": 364,
+      "rows": 9,
+      "sha256": "29c327f4906b2499bf0a8a0bc25b7a0d8164ede45a6c5a216769cb10589dfa05"
+    },
+    {
+      "id": "daily/2026-10-03-feedback.txt",
+      "kind": "feedback",
+      "name": "2026-10-03-feedback.txt",
+      "path": "daily/2026-10-03-feedback.txt",
+      "date": "2026-10-03",
+      "period": "",
+      "bytes": 1075,
+      "rows": 13,
+      "sha256": "f3ec850374db7e4267142c8dfebe14a97f2c148ff3b36ffd59830fa83074f630"
+    },
+    {
+      "id": "daily/2026-10-03-metrics.csv",
+      "kind": "daily",
+      "name": "2026-10-03-metrics.csv",
+      "path": "daily/2026-10-03-metrics.csv",
+      "date": "2026-10-03",
+      "period": "",
+      "bytes": 364,
+      "rows": 9,
+      "sha256": "808fb184e9c98739f7a3976910c2566409b24157e786a63ed56db0aef30cf9fb"
+    },
+    {
+      "id": "users/2026-10-users.csv",
+      "kind": "users",
+      "name": "2026-10-users.csv",
+      "path": "users/2026-10-users.csv",
+      "date": "",
+      "period": "2026-10",
+      "bytes": 899,
+      "rows": 12,
+      "sha256": "3bbc8b5282182569c2946eae0c8dfbaf250d99e020cbaf436fa681184eaa6163"
+    },
+    {
+      "id": "weekly/2026-W40-metrics.csv",
+      "kind": "weekly",
+      "name": "2026-W40-metrics.csv",
+      "path": "weekly/2026-W40-metrics.csv",
+      "date": "",
+      "period": "2026-W40",
+      "bytes": 1907,
+      "rows": 48,
+      "sha256": "5cdfa847cb485729401628de45cc3a3f0ad344d9f240e7aa0b775c7d5e775715"
+    }
+  ]
+}

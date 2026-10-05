@@ -1,7 +1,7 @@
 /* app.js — 运营工作台 Web 版界面与交互 */
 (function () {
   'use strict';
-  var S = window.OpsStore, E = window.OpsEngine, C = window.OpsCharts, D = window.OPSData;
+  var S = window.OpsStore, E = window.OpsEngine, C = window.OpsCharts, D = window.OPSData, SY = window.OpsSync;
   var state = S.load();
   var cfg = state.config;
   var view = 'dashboard';
@@ -106,7 +106,7 @@
   // ---------------- 页面：概览 ----------------
   var NAV = [
     { id: 'dashboard', label: '概览', hint: '今天先做什么', icon: '◎', group: '总览' },
-    { id: 'data', label: '数据', hint: '导入 / 导出', icon: '▤', group: '总览' },
+    { id: 'data', label: '数据源', hint: '自动采集 / 导入', icon: '▤', group: '总览' },
     { id: 'check', label: '每日晨检', hint: '30 秒简报', icon: '☼', group: '分析' },
     { id: 'feedback', label: '反馈分析', hint: '情感 / 需求', icon: '✎', group: '分析' },
     { id: 'metrics', label: '指标分析', hint: '趋势 / 异常', icon: '▲', group: '分析' },
@@ -132,7 +132,7 @@
       statCard('周指标', s.weeklyRows ? s.weeklyRows + ' 行' : '—', s.weeklyRows ? '可用于趋势分析' : '未导入', s.weeklyRows ? 'ok' : 'na'),
       statCard('用户数据', s.users ? s.users + ' 位' : '—', s.users ? '可用于分层打标' : '未导入', s.users ? 'ok' : 'na'),
       '</div>',
-      gap.length ? '<div class="card notice"><b>还缺：' + gap.join(' / ') + '</b><p>去「数据」页导入，或点「载入示例数据」先跑一遍完整流程。</p>' +
+      gap.length ? '<div class="card notice"><b>还缺：' + gap.join(' / ') + '</b><p>等后台数据自动同步，或去「数据源」页手动导入 / 载入示例数据先跑一遍完整流程。</p>' +
         '<div class="row"><button class="btn primary" data-act="load-sample">载入示例数据</button><button class="btn" data-act="go" data-view="data">去导入数据</button></div></div>' : '',
       '<div class="grid k3 mt">',
       quickCard('每日晨检', '扫当日指标与反馈，产出 200 字简报 + 今日待办', 'check', '开始晨检'),
@@ -164,7 +164,9 @@
   function viewData() {
     var s = summary();
     return [
-      '<div class="page-head"><h1>数据</h1><p class="sub">支持「选择文件」批量导入，也可以直接粘贴文本。文件格式见页面底部说明；同一文件可重复导入，会按 日期+指标 覆盖。</p></div>',
+      '<div class="page-head"><h1>数据源</h1><p class="sub">后台采集好的数据会自动同步进来，正常情况下不需要手动上传；下面的手动导入只在网络不通或临时补数时使用。</p></div>',
+      syncCard(),
+      '<h3 class="sec-h">手动导入（兜底）</h3>',
       '<div class="grid k2">',
       importCard('daily', '日指标 CSV', '文件名如 2026-10-03-metrics.csv；表头：指标,数值,对比值,对比口径', s.dailyRows ? s.dailyDates.length + ' 天 / ' + s.dailyRows + ' 行' : '未导入'),
       importCard('feedback', '用户反馈 TXT', '一行一条：时间 | 渠道 | 用户ID | 内容；# 开头为注释', s.feedback ? s.feedback + ' 条 / ' + s.feedbackDates.length + ' 天' : '未导入'),
@@ -185,6 +187,44 @@
       '<tr><td>用户</td><td>YYYY-MM-users.csv</td><td>用户ID, 注册日期, 最近活跃日期, 累计订单数, 累计付费金额, 反馈次数, 最近反馈日期, 渠道, 备注</td></tr>',
       '</tbody></table><p class="muted sm">编码统一 UTF-8（Excel 另存为「CSV UTF-8（逗号分隔）」）；缺数据留空，不要填 0。</p></div>'
     ].join('');
+  }
+  // ---------------- 数据源：自动同步 ----------------
+  function syncCard() {
+    var c = SY ? SY.config() : { baseUrl: 'data/', auto: false, files: {}, last: null, log: [] };
+    var last = c.last;
+    var seenCount = Object.keys(c.files || {}).length;
+    var badge = last ? (last.ok ? '<span class="chip ok">同步正常</span>' : '<span class="chip bad">同步失败</span>') : '<span class="chip na">未同步</span>';
+    var logRows = (c.log || []).map(function (l) {
+      return '<tr><td>' + esc(when(l.at)) + '</td><td>' + esc(l.base || '') + '</td>' +
+        '<td>' + (l.ok ? '<span class="chip ok">成功</span>' : '<span class="chip bad">失败</span>') + ' ' + esc(l.message || '') + '</td>' +
+        '<td>' + (l.rows || 0) + '</td></tr>';
+    }).join('');
+    return '<div class="card mt sync-card"><div class="card-head"><h3>数据源 · 自动同步</h3>' + badge + '</div>' +
+      '<p class="muted sm">后台每日采集完成后，打开本页会自动拉取新增 / 变更的数据文件并入库，<b>不需要手动上传</b>。默认读取本站 <span class="mono">data/</span> 目录，也可以指向后台或对象存储的地址（需允许跨域）。同步按文件内容哈希比对，已同步过的文件不会重复下载。</p>' +
+      '<div class="row"><input class="sync-url" type="text" data-input="sync-source" value="' + esc(c.baseUrl) + '" placeholder="data/ 或 https://example.com/ops-data/">' +
+      '<button class="btn sm" data-act="sync-source-save">保存地址</button>' +
+      '<button class="btn sm primary" data-act="sync-now">立即同步</button>' +
+      '<button class="btn sm ghost" data-act="sync-check">检查更新</button></div>' +
+      '<div class="row mt"><label class="switch"><input type="checkbox" data-input="sync-auto"' + (c.auto ? ' checked' : '') + '> 打开页面时自动同步</label>' +
+      '<span class="muted sm">已同步文件 ' + seenCount + ' 个' + (last ? ' · 上次 ' + esc(when(last.at)) + '：' + esc(last.message) : '') + '</span></div>' +
+      ((c.log && c.log.length) ? '<details class="logbox mt"><summary>同步日志（最近 ' + c.log.length + ' 条）</summary>' +
+        '<table class="tbl"><thead><tr><th>时间</th><th>数据源</th><th>结果</th><th>新增记录</th></tr></thead><tbody>' + logRows + '</tbody></table>' +
+        '<div class="row"><button class="btn tiny ghost danger" data-act="sync-forget">清空同步记录</button></div></details>' : '') +
+      '</div>';
+  }
+  function doSync(dry) {
+    if (!SY) { toast('同步模块未加载'); return; }
+    toast(dry ? '正在检查更新…' : '正在从数据源同步…');
+    SY.run({ dryRun: !!dry }).then(function (r) { toast(r.message); render(); });
+  }
+  var autoSynced = false;
+  function autoSyncOnce() {
+    if (autoSynced || !SY) { return; }
+    if (!SY.config().auto) { return; }
+    autoSynced = true;
+    SY.run({}).then(function (r) {
+      if (r.ok && (r.newFiles || r.changed)) { toast(r.message); render(); }
+    });
   }
   function importCard(kind, title, hint, status) {
     return '<div class="card import"><div class="card-head"><h3>' + esc(title) + '</h3><span class="chip ok">' + esc(status) + '</span></div>' +
@@ -743,7 +783,8 @@
     var st = $('#statusBar');
     if (st) {
       st.textContent = '日指标 ' + (s.dailyRows ? s.dailyDates.length + ' 天' : '—') + '　反馈 ' + s.feedback + ' 条　用户 ' + s.users +
-        ' 位　台账 ' + (state.ledgers.ledger.length + state.ledgers.metrics.length + state.ledgers.tags.length) + ' 条';
+        ' 位　台账 ' + (state.ledgers.ledger.length + state.ledgers.metrics.length + state.ledgers.tags.length) + ' 条　同步 ' +
+        (state.sync && state.sync.last ? (state.sync.last.ok ? '正常' : '异常') : '未同步');
     }
   }
 
@@ -755,6 +796,10 @@
     var kind = t.getAttribute('data-kind') || t.getAttribute('data-dl');
     if (act === 'go') { go(t.getAttribute('data-view')); }
     else if (act === 'rerender') { render(); }
+    else if (act === 'sync-now') { doSync(false); }
+    else if (act === 'sync-check') { doSync(true); }
+    else if (act === 'sync-source-save') { var su = $('[data-input="sync-source"]'); var sv = (su && su.value.trim()) ? su.value.trim() : 'data/'; SY.setConfig({ baseUrl: sv }); toast('数据源地址已保存：' + sv); render(); }
+    else if (act === 'sync-forget') { if (window.confirm('清空同步记录？下次同步会重新下载全部文件（已入库的数据不受影响）。')) { SY.forget(); toast('已清空同步记录'); render(); } }
     else if (act === 'load-sample') { S.loadSample(); toast('示例数据已载入'); view = 'dashboard'; render(); }
     else if (act === 'clear') {
       if (window.confirm('确认清空该数据？此操作不可撤销。')) { S.clearData(kind); toast('已清空'); render(); }
@@ -782,6 +827,7 @@
   }
   function onChange(e) {
     var t = e.target;
+    if (t.matches('input[data-input="sync-auto"]')) { SY.setConfig({ auto: t.checked }); toast(t.checked ? '已开启自动同步：打开页面即拉取后台数据' : '已关闭自动同步'); return; }
     if (t.matches('select[data-act="pick-date"]')) { ui.last.checkDate = t.value; render(); return; }
     if (t.matches('select[data-act="metric-pick"]')) { ui.metricPick = t.value; render(); return; }
     if (t.type === 'file' && t.getAttribute('data-file')) {
@@ -835,6 +881,7 @@
     document.addEventListener('change', onChange);
     document.addEventListener('input', onInput);
     render();
+    autoSyncOnce();
   }
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
 })();

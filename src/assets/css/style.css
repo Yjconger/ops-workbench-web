@@ -212,3 +212,14 @@ svg.line{display:block;max-width:100%}
   .search{width:100%}
   .bar-label{flex-basis:72px}
 }
+/* ---------- 数据源 · 自动同步 ---------- */
+.sync-url{flex:1 1 280px;min-width:220px;padding:8px 11px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:12.5px;font-family:var(--mono)}
+.sync-url:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-soft)}
+.switch{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--sub);cursor:pointer}
+.switch input{width:15px;height:15px;accent-color:var(--pri);cursor:pointer}
+details.logbox>summary{cursor:pointer;list-style:none;color:var(--sub);font-size:12px;padding:4px 0}
+details.logbox>summary::-webkit-details-marker{display:none}
+details.logbox>summary::before{content:'▸ '}
+details.logbox[open]>summary::before{content:'▾ '}
+.sec-h{margin:18px 0 10px;font-size:14px;font-weight:600;color:var(--ink)}
+.sync-card{border-color:var(--pri-line);background:linear-gradient(180deg,var(--pri-soft) 0%,#fff 42%)}

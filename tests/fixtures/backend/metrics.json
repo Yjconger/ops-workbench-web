@@ -1,0 +1,63 @@
+{
+  "code": 0,
+  "msg": "ok",
+  "data": {
+    "date": "{{date}}",
+    "list": [
+      {
+        "metric_name": "日活跃用户数",
+        "value": 12480,
+        "prev_value": 13010,
+        "compare_basis": "昨日"
+      },
+      {
+        "metric_name": "新增注册用户",
+        "value": 398,
+        "prev_value": 440,
+        "compare_basis": "昨日"
+      },
+      {
+        "metric_name": "付费订单数",
+        "value": 318,
+        "prev_value": 352,
+        "compare_basis": "昨日"
+      },
+      {
+        "metric_name": "支付成功率(%)",
+        "value": 93.2,
+        "prev_value": 93.8,
+        "compare_basis": "昨日"
+      },
+      {
+        "metric_name": "订单转化率(%)",
+        "value": 2.78,
+        "prev_value": 2.86,
+        "compare_basis": "昨日"
+      },
+      {
+        "metric_name": "接口平均响应时长(ms)",
+        "value": 2050,
+        "prev_value": 1880,
+        "compare_basis": "昨日"
+      },
+      {
+        "metric_name": "核心功能使用率(%)",
+        "value": 40.3,
+        "prev_value": 40.8,
+        "compare_basis": "昨日"
+      },
+      {
+        "metric_name": "次日留存率(%)",
+        "value": 34.5,
+        "prev_value": 34.8,
+        "compare_basis": "昨日"
+      },
+      {
+        "metric_name": "负面反馈数",
+        "value": 14,
+        "prev_value": 13,
+        "compare_basis": "昨日"
+      }
+    ]
+  }
+}

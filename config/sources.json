@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "source": "产品后台（示例配置，尚未启用）",
+  "sources": [
+    {
+      "name": "日指标 · 后台开放接口",
+      "enabled": false,
+      "type": "http-json",
+      "kind": "daily",
+      "url": "https://api.your-company.com/ops/metrics?date={date}",
+      "auth": { "scheme": "bearer", "tokenEnv": "OPS_API_TOKEN" },
+      "rowsPath": "data.list",
+      "fields": { "metric": "metric_name", "value": "value", "compare": "prev_value", "basis": "compare_basis" }
+    },
+    {
+      "name": "用户反馈 · 后台开放接口",
+      "enabled": false,
+      "type": "http-json",
+      "kind": "feedback",
+      "url": "https://api.your-company.com/ops/feedback?date={date}",
+      "auth": { "scheme": "apikey", "header": "X-API-Key", "tokenEnv": "OPS_API_KEY" },
+      "rowsPath": "data.list",
+      "fields": { "time": "created_at", "channel": "source", "userId": "uid", "content": "text" }
+    },
+    {
+      "name": "周指标 · 后台定时导出到对象存储",
+      "enabled": false,
+      "type": "http-file",
+      "kind": "weekly",
+      "url": "https://cdn.your-company.com/ops/weekly/{week}-metrics.csv",
+      "saveAs": "{week}-metrics.csv"
+    },
+    {
+      "name": "用户行为 · 后台定时导出到对象存储",
+      "enabled": false,
+      "type": "http-file",
+      "kind": "users",
+      "url": "https://cdn.your-company.com/ops/users/{month}-users.csv",
+      "saveAs": "{month}-users.csv"
+    },
+    {
+      "name": "本机后台导出目录 · 员工机计划任务",
+      "enabled": false,
+      "type": "local-export",
+      "kind": "daily",
+      "path": "D:\\ops-export\\{date}-metrics.csv",
+      "saveAs": "{date}-metrics.csv"
+    }
+  ]
+}

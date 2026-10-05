@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "source": "本地 Mock 后台（端到端测试）",
+  "sources": [
+    {
+      "name": "日指标 · Mock 接口",
+      "enabled": true,
+      "type": "http-json",
+      "kind": "daily",
+      "url": "http://127.0.0.1:8111/ops/metrics?date={date}",
+      "rowsPath": "data.list",
+      "fields": { "metric": "metric_name", "value": "value", "compare": "prev_value", "basis": "compare_basis" }
+    },
+    {
+      "name": "用户反馈 · Mock 接口",
+      "enabled": true,
+      "type": "http-json",
+      "kind": "feedback",
+      "url": "http://127.0.0.1:8111/ops/feedback?date={date}",
+      "rowsPath": "data.list",
+      "fields": { "time": "created_at", "channel": "source", "userId": "uid", "content": "text" }
+    }
+  ]
+}

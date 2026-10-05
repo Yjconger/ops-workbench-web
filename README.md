@@ -41,8 +41,9 @@
 ## 三、核心特性
 
 - **纯前端、零构建**：直接 `<script>` 引入，没有任何打包工具，`src/` 复制到任意静态托管就能跑；
-- **数据不出本机**：所有数据只写进浏览器 `localStorage`（键 `ops-workbench-web-v1`），不发任何网络请求；
-- **不用联网也能用**：分析全部由本地规则引擎完成，离线可用；
+- **数据自动到位**：产品后台每日定时采集 → 提交到 `src/data/` → 打开页面自动同步，**不用再手动上传**（见第六节）；
+- **数据只存在本机**：分析结果只写进浏览器 `localStorage`（键 `ops-workbench-web-v1`）；唯一的网络请求是从数据源目录拉取 `manifest.json` 与数据文件，只读、不回传；
+- **不用联网也能用**：分析全部由本地规则引擎完成，离线可用；数据源不通时照常用「手动导入」兜底；
 - **AI 解读是可选项**：想让它把已算好的事实润色成一段话，可在「口径设置」里填自己的 OpenAI 兼容 Key；不填也完全可用；
 - **口径可在线改**：指标阈值、反馈词表、分类字典都能在「口径设置」页直接编辑并保存；
 - **一键示例数据**：点侧栏「载入示例数据」立刻有 14 天指标 + 8 周周指标 + 12 位用户 + 24 条反馈可跑，方便先看效果再换真实数据。
@@ -53,11 +54,20 @@
 project-005-运营工作台Web版\
 ├── README.md                       # 本文件
 ├── netlify.toml / vercel.json      # 托管平台配置（发布目录 = src）
-├── .github\workflows\deploy-pages.yml   # GitHub Pages 自动部署
-├── scripts\serve.ps1               # 本地一键起静态服务器并打开浏览器
+├── config\sources.json             # ★ 后台数据源配置（地址 / 鉴权 / 字段映射）
+├── .github\workflows\
+│   ├── deploy-pages.yml            # GitHub Pages 自动部署
+│   └── collect-daily.yml           # 每日定时采集后台数据
+├── scripts\
+│   ├── serve.ps1                   # 本地一键起静态服务器并打开浏览器
+│   ├── collect-daily.ps1           # ★ 数据采集器（后台 → src/data，幂等提交）
+│   ├── mock-backend.ps1            # 本地 Mock 后台（不接真实接口也能测通）
+│   └── lib\manifest.cjs            # 清单构建器（sha256 / 命名约定唯一实现）
 ├── docs\
 │   ├── 01-使用手册.md              # 数据怎么准备、每个页面怎么用
-│   └── 02-部署说明.md              # 四种部署方式，含不写代码的拖拽上传
+│   ├── 02-部署说明.md              # 四种部署方式，含不写代码的拖拽上传
+│   └── 03-数据自动采集.md          # 数据源配置、命名约定、Secrets、排错
+├── tests\fixtures\                 # Mock 后台的假后台响应 + 测试用数据源配置
 ├── notes\迭代日志.md               # 每次改动的记录
 ├── output\                         # 导出的报告 / CSV / HTML 看板可放这里
 └── src\                            # ★ 网站本体，部署时发布这个目录
@@ -71,9 +81,13 @@ project-005-运营工作台Web版\
     │       ├── store.js            # 状态、localStorage、台账、导入导出
     │       ├── charts.js           # 零依赖 SVG 图表（走势线/折线/环形/条形）
     │       ├── llm.js              # 可选 AI 解读（OpenAI 兼容接口）
+    │       ├── sync.js             # ★ 数据源自动同步（拉清单、按 sha256 只取新增/变更）
     │       └── app.js              # 九个页面视图 + 事件绑定
+    ├── data\                       # ★ 数据源目录：日/周/用户数据 + manifest.json
     └── tests\
         ├── engine.test.cjs         # 引擎单元测试（Node 直接跑，48 项）
+        ├── sync.test.cjs           # 清单 / 同步器单元测试（38 项）
+        ├── collect.e2e.ps1         # 采集端到端测试（起 Mock 后台真跑一遍，21 项）
         ├── smoke.html / smoke.js   # 浏览器端到端冒烟测试（67 项）
 ```
 
@@ -94,7 +108,30 @@ powershell -ExecutionPolicy Bypass -File scripts\serve.ps1
 
 **部署成公网可访问的网址**：见 `docs\02-部署说明.md`（GitHub Pages / Cloudflare Pages / Netlify 拖拽 / Vercel 四种）。
 
-## 六、自己验证改动没坏
+## 六、数据自动采集（不用手动上传）
+
+数据不再靠人导：**产品后台每日自动采集 → 提交到仓库 → 打开页面自动同步**。
+
+```text
+产品后台接口 / 定时导出文件      scripts\collect-daily.ps1        src\data\
+      （每天定时触发）       →   按 config\sources.json 拉取   →  CSV + manifest.json
+                                规范成工作台口径、幂等提交        随站点一起发布
+                                                                       ↓
+                                                         打开网页 → 自动同步进工作区
+```
+
+- **触发**：`.github\workflows\collect-daily.yml` 每天北京时间 01:00 自动跑（电脑关机也会跑）；也可手动 `pwsh -File scripts\collect-daily.ps1`；
+- **配置**：`config\sources.json` 里每个数据源填后台地址与鉴权方式，`enabled` 改 `true` 即生效；
+- **凭据**：密钥放 GitHub Secrets（`OPS_API_TOKEN` / `OPS_API_KEY`）或本机环境变量，**不写进仓库**；
+- **幂等**：数据没变就不重写文件、不产生新提交，定时任务多跑几次没有副作用；
+- **浏览器端**：打开页面自动拉 `manifest.json`，按 sha256 只下载新增 / 变更文件；「数据源」页可手动同步、检查更新、看同步日志、开关自动同步；
+- **兜底**：原来的「选择文件 / 粘贴文本」保留为「手动导入（兜底）」。
+
+> ⚠️ `src\data\` 会随站点一起公开。仓库是 public 时**任何人都能下载这些 CSV 与反馈原文** —— 真实用户数据请先脱敏，或换私有仓库部署。
+
+完整说明（命名约定、三种适配器、字段映射、Secrets、排错）见 `docs\03-数据自动采集.md`。
+
+## 七、自己验证改动没坏
 
 ```powershell
 # 1) 引擎单元测试（48 项）
@@ -107,18 +144,30 @@ node src\tests\engine.test.cjs
 
 冒烟测试会真的点击九个页面、五类分析、三类台账写入和 11 种导出，断言导出的文件名与体积，能挡住“按钮点了没反应”这类问题。
 
-## 七、数据准备速查
+```powershell
+# 3) 数据自动采集：清单 / 同步器单元测试（38 项）
+node src\tests\sync.test.cjs
 
-| 频率 | 放到哪 | 命名 | 字段 |
-| --- | --- | --- | --- |
-| 每日指标 | 数据页直接导入 | `YYYY-MM-DD-metrics.csv` | 指标,数值,对比值,对比口径 |
-| 每日反馈 | 数据页直接导入 | `YYYY-MM-DD-feedback.txt` | 时间 \| 渠道 \| 用户ID \| 内容（`#` 开头为注释） |
-| 每周指标 | 数据页直接导入 | `YYYY-Www-metrics.csv` | 周,指标,数值,环比,同比（同一文件可含多周） |
-| 用户行为 | 数据页直接导入 | `YYYY-MM-users.csv` | 用户ID,注册日期,最近活跃日期,累计订单数,累计付费金额,反馈次数,最近反馈日期,渠道,备注 |
+# 4) 采集端到端测试（21 项）：自己起 Mock 后台，真跑一遍「后台 → 采集器 → 数据源」
+pwsh -NoProfile -File src\tests\collect.e2e.ps1
+```
 
-详细字段与示例见 `docs\01-使用手册.md`；业务口径见 project-004 的 `docs\00-业务背景与指标口径.md`（Web 版已把这份口径内置为默认配置，可在「口径设置」页改）。
+前两项用 Node 直接跑（无需浏览器）；第 4 项会自己在 `127.0.0.1:8111` 起一个 Mock 后台，跑完自动回收。
 
-## 八、迭代方式
+## 八、数据准备速查
+
+命名约定对**自动采集**和**手动导入**是同一套 —— 采集器按这套规则生成文件名，浏览器才能识别。
+
+| 频率 | 自动采集落在 | 手动导入 | 命名 | 字段 |
+| --- | --- | --- | --- | --- |
+| 每日指标 | `src\data\daily\` | 数据页导入 | `YYYY-MM-DD-metrics.csv` | 指标,数值,对比值,对比口径 |
+| 每日反馈 | `src\data\daily\` | 数据页导入 | `YYYY-MM-DD-feedback.txt` | 时间 \| 渠道 \| 用户ID \| 内容（`#` 开头为注释） |
+| 每周指标 | `src\data\weekly\` | 数据页导入 | `YYYY-Www-metrics.csv` | 周,指标,数值,环比,同比（同一文件可含多周） |
+| 用户行为 | `src\data\users\` | 数据页导入 | `YYYY-MM-users.csv` | 用户ID,注册日期,最近活跃日期,累计订单数,累计付费金额,反馈次数,最近反馈日期,渠道,备注 |
+
+详细字段与示例见 `docs\01-使用手册.md`；自动采集的配置与排错见 `docs\03-数据自动采集.md`；业务口径见 project-004 的 `docs\00-业务背景与指标口径.md`（Web 版已把这份口径内置为默认配置，可在「口径设置」页改）。
+
+## 九、迭代方式
 
 - 页面布局 / 文案不满意 → 直接改 `src\assets\js\app.js` 里对应 `viewXxx()`；
 - 分析逻辑不满意（阈值、分类、优先级）→ 优先在网页「口径设置」页改，改了立刻生效；要固化则改 `src\assets\js\data.js` 的 `DEFAULT_CONFIG`；

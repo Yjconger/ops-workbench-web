@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>运营分析工作台 Web 版 · 作品集</title>
+<style>
+  :root{
+    --brand:#7c5cff; --brand2:#a78bfa; --brand-d:#5b3fd6;
+    --ink:#17162a; --ink2:#3a3853; --muted:#71708a; --line:#e7e5f2;
+    --bg:#f7f6fc; --ok:#12a150; --warn:#e08c00; --bad:#e11d48;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB",-apple-system,sans-serif;
+    color:var(--ink); background:#fff; line-height:1.55; -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
+  @page{ size:A4; margin:0 }
+  .page{
+    position:relative; width:210mm; height:296mm; padding:15mm 15mm 16mm; overflow:hidden;
+    page-break-after:always; break-after:page; background:#fff;
+  }
+  .page:last-child{ page-break-after:auto; break-after:auto }
+  .pfoot{
+    position:absolute; left:15mm; right:15mm; bottom:6mm; display:flex; justify-content:space-between;
+    font-size:7pt; color:#a9a7bd; letter-spacing:.02em; border-top:1px solid var(--line); padding-top:2.5mm;
+  }
+  h1,h2,h3,h4{margin:0}
+  .ph{ display:flex; align-items:flex-start; gap:9px; margin-bottom:5mm }
+  .ph .no{
+    flex:0 0 auto; font-size:9pt; font-weight:700; color:#fff; background:var(--brand);
+    border-radius:6px; padding:2px 7px; letter-spacing:.06em; margin-top:2px
+  }
+  .ph h2{ font-size:16pt; letter-spacing:-.01em }
+  .ph .sub{ font-size:8.5pt; color:var(--muted); margin-top:1.5mm }
+  .lead{ font-size:9.5pt; color:var(--ink2); margin:0 0 5mm }
+  p{ margin:0 0 2.5mm }
+  .rule{ height:1px; background:var(--line); margin:4.5mm 0 }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:5mm }
+  .grid3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:4mm }
+  .grid5{ display:grid; grid-template-columns:repeat(5,1fr); gap:3mm }
+  .card{ border:1px solid var(--line); border-radius:9px; padding:4mm 4.5mm; background:#fff }
+  .card.soft{ background:var(--bg); border-color:#eeecf8 }
+  .card h4{ font-size:10pt; margin-bottom:1.5mm }
+  .card .k{ font-size:8.5pt; color:var(--muted) }
+  .card p{ font-size:8.7pt; color:var(--ink2); margin:0 }
+  .tag{
+    display:inline-block; font-size:7.5pt; padding:1px 6px; border-radius:999px;
+    background:#efeaff; color:var(--brand-d); border:1px solid #ded5ff; margin-right:3px
+  }
+  .tag.g{ background:#e8f8ef; color:#0d7d3d; border-color:#c8ecd8 }
+  .tag.w{ background:#fff4e0; color:#a86400; border-color:#ffe1b0 }
+  .tag.r{ background:#fdeaee; color:#b3123a; border-color:#f9cdd8 }
+  .tag.b{ background:#e8f1ff; color:#1e5bb8; border-color:#cfe0ff }
+  table{ width:100%; border-collapse:collapse; font-size:8.2pt }
+  th,td{ border:1px solid var(--line); padding:2.2mm 2.4mm; text-align:left; vertical-align:top }
+  th{ background:#f2f0fb; color:var(--ink); font-weight:700; font-size:8pt }
+  td.num{ text-align:right; font-variant-numeric:tabular-nums }
+  .tl th,.tl td{ padding:2.4mm }
+  .shot{ border:1px solid var(--line); border-radius:10px; overflow:hidden; background:#fff }
+  .shot img{ display:block; width:100% }
+  .cap{ font-size:7.5pt; color:var(--muted); margin-top:1.8mm }
+  .steps{ display:grid; grid-template-columns:repeat(4,1fr); gap:3.5mm }
+  .step{ border:1px solid var(--line); border-radius:9px; padding:3.5mm; background:var(--bg) }
+  .step .n{
+    width:6.5mm; height:6.5mm; border-radius:50%; background:var(--brand); color:#fff;
+    font-size:8pt; font-weight:700; display:flex; align-items:center; justify-content:center; margin-bottom:2mm
+  }
+  .step h4{ font-size:9pt }
+  .step p{ font-size:8pt; color:var(--muted); margin:1mm 0 0 }
+  .kpi{ display:grid; grid-template-columns:repeat(4,1fr); gap:3.5mm }
+  .kpi .box{ border:1px solid var(--line); border-radius:9px; padding:3.5mm; text-align:center; background:var(--bg) }
+  .kpi .v{ font-size:15pt; font-weight:700; color:var(--brand-d) }
+  .kpi .l{ font-size:7.5pt; color:var(--muted); margin-top:.8mm }
+  .tline{ display:grid; grid-template-columns:repeat(5,1fr); gap:2.6mm }
+  .tline .t{ border-top:2px solid var(--brand2); padding-top:2.4mm }
+  .tline .t .h{ font-size:8pt; font-weight:700; color:var(--brand-d) }
+  .tline .t .b{ font-size:7.6pt; color:var(--ink2); margin-top:1mm }
+  .tline .t .o{ font-size:7.2pt; color:var(--muted); margin-top:1mm; border-top:1px dashed var(--line); padding-top:1mm }
+  ul{ margin:0 0 2mm; padding-left:4.6mm }
+  li{ font-size:8.7pt; color:var(--ink2); margin-bottom:1.1mm }
+  .mono{ font-family:Consolas,"Cascadia Mono",monospace; font-size:7.8pt }
+  .code{
+    background:#1d1b2e; color:#e8e6ff; border-radius:9px; padding:3.5mm 4mm; font-family:Consolas,"Cascadia Mono",monospace;
+    font-size:7.6pt; line-height:1.7; white-space:pre-wrap; word-break:break-word
+  }
+  .code .c{ color:#9d97c9 }
+  .code .y{ color:#ffd479 }
+  .callout{ border-left:3px solid var(--brand); background:#f7f5ff; border-radius:0 8px 8px 0; padding:3mm 4mm; font-size:8.5pt; color:var(--ink2) }
+  .cover{ background:linear-gradient(150deg,#2b1f6b 0%,#5b3fd6 48%,#8b6cff 100%); color:#fff; padding:0 }
+  .cover .inner{ position:relative; height:100%; padding:26mm 18mm 18mm; display:flex; flex-direction:column }
+  .cover .badge{
+    display:inline-block; font-size:8pt; letter-spacing:.14em; border:1px solid rgba(255,255,255,.45);
+    border-radius:999px; padding:1.5mm 4mm; margin-bottom:9mm; width:max-content
+  }
+  .cover h1{ font-size:31pt; line-height:1.22; letter-spacing:-.02em }
+  .cover .st{ font-size:12pt; margin-top:4mm; color:rgba(255,255,255,.9) }
+  .cover .desc{ font-size:9.5pt; margin-top:7mm; max-width:132mm; color:rgba(255,255,255,.86); line-height:1.75 }
+  .cover .facts{ margin-top:auto; display:grid; grid-template-columns:repeat(4,1fr); gap:4mm }
+  .cover .fact{ border-top:1px solid rgba(255,255,255,.35); padding-top:3mm }
+  .cover .fact .v{ font-size:13pt; font-weight:700 }
+  .cover .fact .l{ font-size:7.5pt; color:rgba(255,255,255,.78); margin-top:.8mm }
+  .cover .meta{ margin-top:8mm; font-size:8pt; color:rgba(255,255,255,.7) }
+  .cover .url{ font-family:Consolas,monospace; font-size:9pt; color:#fff; word-break:break-all }
+</style>
+</head>
+<body>
+
+<!-- ================= 1 封面 ================= -->
+<section class="page cover">
+  <div class="inner">
+    <span class="badge">作品集 · PORTFOLIO</span>
+    <h1>运营分析工作台<br>Web 版</h1>
+    <div class="st">把运营的重复分析动作，拆成可复用的 AI 工作流</div>
+    <div class="desc">
+      从数据准备到策略输出的完整闭环：每日晨检、反馈分析、指标监控、用户分层、整合交叉验证。
+      本作品集展示工作台的工作流程、界面形态，以及一次真实分析跑出来的数据示例与结论。
+    </div>
+    <div class="facts">
+      <div class="fact"><div class="v">5</div><div class="l">独立 Skill（能力单元）</div></div>
+      <div class="fact"><div class="v">4</div><div class="l">核心运营场景</div></div>
+      <div class="fact"><div class="v">115</div><div class="l">项自动化测试（48+67）</div></div>
+      <div class="fact"><div class="v">0</div><div class="l">外部依赖 / 数据不出本机</div></div>
+    </div>
+    <div class="meta">
+      在线地址 <span class="url">https://yjconger.github.io/ops-workbench-web/</span><br>
+      数据示例日期 2026-10-04 ｜ 作品集生成于 2026-10-04
+    </div>
+  </div>
+</section>
+
+<!-- ================= 2 定位与原则 ================= -->
+<section class="page">
+  <div class="ph">
+    <span class="no">01</span>
+    <div>
+      <h2>项目定位与三条设计原则</h2>
+      <div class="sub">把重复率最高的分析动作固化成流程，让一个人完成原本多人协作的活</div>
+    </div>
+  </div>
+
+  <p class="lead">
+    运营日常最耗人的不是判断，而是判断之前的搬运与整理：翻后台导数据、读几十条反馈、手工分类、再拼成一份周报。
+    工作台的思路是把这些重复动作拆解成可复用的 AI 工作流 —— 看数据、读反馈、打标签、出策略，每一步都由一个独立能力单元承担，
+    人只负责在关键节点做判断。
+  </p>
+
+  <div class="grid3">
+    <div class="card soft">
+      <h4>① 分层拆解</h4>
+      <p>运营工作虽然繁杂，但底层动作是固定的：<b>看数据 → 读反馈 → 打标签 → 出策略</b>。每个动作对应一个独立 Skill，互不干扰，按需调用。</p>
+    </div>
+    <div class="card soft">
+      <h4>② 日周月分层</h4>
+      <p>日指标用于<b>晨检</b>，快速判断今天先做什么；周指标用于<b>趋势</b>，判断这周发生了什么；月指标用于<b>复盘</b>，判断这个月策略是否有效。不同频率的数据进入不同流程，避免噪声干扰。</p>
+    </div>
+    <div class="card soft">
+      <h4>③ 交叉验证</h4>
+      <p>反馈分析只能告诉你用户在说什么，指标分析只能告诉你数据在怎么变。<b>两者交叉验证</b>，才能回答用户的声音是否在数据上有印证，从而输出有依据的策略建议。</p>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+
+  <h4 style="font-size:10.5pt;margin-bottom:2.5mm">一天的工作节奏：不同频率的数据进不同的流程</h4>
+  <div class="tline">
+    <div class="t">
+      <div class="h">09:00 晨检</div>
+      <div class="b">扫当日指标与反馈，先判断今天优先处理什么</div>
+      <div class="o">输出：200 字简报 + 今日待办</div>
+    </div>
+    <div class="t">
+      <div class="h">全天 反馈入库</div>
+      <div class="b">客服工单 / 应用商店 / 社群 / 微博按统一格式落盘</div>
+      <div class="o">输出：可分析的结构化反馈文本</div>
+    </div>
+    <div class="t">
+      <div class="h">每日 指标入库</div>
+      <div class="b">日指标 CSV 更新，异常在次日晨检里直接暴露</div>
+      <div class="o">输出：趋势线与异常标注</div>
+    </div>
+    <div class="t">
+      <div class="h">每周 整合分析</div>
+      <div class="b">交叉验证一周的反馈与指标，回答「这周发生了什么」</div>
+      <div class="o">输出：策略建议 + 下周监控重点</div>
+    </div>
+    <div class="t">
+      <div class="h">每月 复盘</div>
+      <div class="b">用月指标回答「这个月策略是否有效」</div>
+      <div class="o">输出：策略有效性结论</div>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>解决什么问题</h4>
+      <ul>
+        <li>反馈散落在客服工单、应用商店、社群、微博，靠人逐条读、口径不统一；</li>
+        <li>指标只看单日涨跌，缺少趋势与异常标注，问题积累到周末才被发现；</li>
+        <li>反馈与数据各说各话，策略建议没有证据链，落不了地；</li>
+        <li>同一个分析动作每周重做一遍，无法沉淀成标准流程。</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>交付了什么</h4>
+      <ul>
+        <li><b>Codex CLI 版</b>：<span class="mono">AGENTS.md</span> + 5 个 Skill + 3 个台账 + 3 个数据目录，自然语言触发；</li>
+        <li><b>Web 版</b>：把同一套口径与分析逻辑落到浏览器里的确定性规则引擎，零依赖静态站，打开网址就能用；</li>
+        <li>三个台账跨会话记录每次分析结果，支持历史查询与趋势追踪；</li>
+        <li>每一次输出都可以一键导出（报告 / 台账 / HTML 看板 / 工作区）。</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="pfoot"><span>运营分析工作台 · Web 版</span><span>01 / 09</span></div>
+</section>
+
+<!-- ================= 3 结构与 Skill ================= -->
+<section class="page">
+  <div class="ph">
+    <span class="no">02</span>
+    <div>
+      <h2>工作台结构：一份共享上下文 + 五个 Skill</h2>
+      <div class="sub"><span class="mono">AGENTS.md</span> 定义业务背景、能力清单与触发规则，所有 Skill 共享同一套业务定义</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th style="width:20%">Skill</th><th style="width:44%">职责（做什么）</th><th style="width:36%">触发词（怎么说）</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><b>daily-check</b></td><td>每日晨检：快速扫描当日指标与反馈，输出今日关注与待办</td><td><span class="tag">今日晨检</span><span class="tag">看看今天的数据</span></td></tr>
+      <tr><td><b>analyze-feedback</b></td><td>反馈分析：情感判定、问题分类、需求提炼</td><td><span class="tag">分析反馈</span><span class="tag">提炼需求</span></td></tr>
+      <tr><td><b>analyze-product-metrics</b></td><td>指标分析：趋势识别、异常标注、归因假设</td><td><span class="tag">分析数据</span><span class="tag">生成看板</span></td></tr>
+      <tr><td><b>tag-users</b></td><td>用户打标签：按生命周期、价值、反馈行为三个维度分层</td><td><span class="tag">打标签</span><span class="tag">用户分层</span></td></tr>
+      <tr><td><b>integrated-report</b></td><td>整合分析：交叉验证反馈与数据，输出策略建议</td><td><span class="tag">分析本周运营情况</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="rule"></div>
+
+  <div class="grid3">
+    <div class="card">
+      <h4>三个台账（跨会话记忆）</h4>
+      <p class="k"><span class="mono">ledger.csv</span> 分析结果台账<br>
+      <span class="mono">metrics-ledger.csv</span> 指标台账<br>
+      <span class="mono">tag-ledger.csv</span> 标签台账</p>
+      <p style="margin-top:2mm">记录每次分析的结论，支持历史查询与趋势追踪，也解决了「首次使用没有基线」的问题。</p>
+    </div>
+    <div class="card">
+      <h4>三个数据目录（输入规范）</h4>
+      <p class="k"><span class="mono">data/daily/</span> 日指标 CSV + 日反馈 txt<br>
+      <span class="mono">data/weekly/</span> 周指标<br>
+      <span class="mono">data/users/</span> 用户行为数据</p>
+      <p style="margin-top:2mm">数据可从公司后台导出，也可以手动整理后另存为 CSV / txt，格式固定即可直接进流程。</p>
+    </div>
+    <div class="card">
+      <h4>Web 版的实现取舍</h4>
+      <p>分析动作本质是固定的，因此 Web 版把口径重写成<b>浏览器里的确定性规则引擎</b>：更快、更稳、可复现，且不消耗 token。</p>
+      <p style="margin-top:2mm">九个视图：<span class="mono">dashboard / data / check / feedback / metrics / tags / integrated / ledgers / config</span>。</p>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+
+  <div class="grid2">
+    <div class="card soft">
+      <h4>数据约定：日指标 CSV</h4>
+      <div class="code">指标,数值,对比值,对比口径
+支付成功率(%),93.2,95.2,昨日
+接口平均响应时长(ms),2050,1880,昨日
+负面反馈数,14,13,昨日
+<span class="c"># 每行一个指标，对比口径标注是「昨日」还是「上周同期」</span></div>
+      <div class="cap">口径定义（含正常 / 需关注 / 异常阈值）集中在 config 视图里统一维护，可在线编辑。</div>
+    </div>
+    <div class="card soft">
+      <h4>数据约定：日反馈 txt</h4>
+      <div class="code">时间 | 渠道 | 用户 | 内容
+08:12 | 客服工单 | U10231 | 支付的时候一直失败，试了三次都不行
+13:05 | 微博 | | 更新完卡得不行，滑动都掉帧
+15:12 | 应用商店 | | 希望支持批量删除，一个个删太累了
+<span class="c"># 用户列可空（匿名渠道）；渠道用于来源归因</span></div>
+      <div class="cap">同一份文本既能做情感判定，也能做问题分类与需求提炼。</div>
+    </div>
+  </div>
+
+  <div class="pfoot"><span>运营分析工作台 · Web 版</span><span>02 / 09</span></div>
+</section>
+
+<!-- ================= 4 使用路径与场景 ================= -->
+<section class="page">
+  <div class="ph">
+    <span class="no">03</span>
+    <div>
+      <h2>使用路径：四步跑完，四类场景对外输出</h2>
+      <div class="sub">准备数据 → 启动 → 输入指令 → 获取输出；输出格式不满意就直接调，把新规则追加到对应 Skill 里</div>
+    </div>
+  </div>
+
+  <div class="steps">
+    <div class="step"><div class="n">1</div><h4>准备数据</h4><p>每日放当日指标 CSV 与反馈 txt；每周更新用户行为 CSV。可从后台导出，也可手动整理另存。</p></div>
+    <div class="step"><div class="n">2</div><h4>启动工作台</h4><p>CLI 版在 <span class="mono">ops-workbench</span> 目录下运行 <span class="mono">codex</span>；Web 版直接打开网址。</p></div>
+    <div class="step"><div class="n">3</div><h4>输入指令</h4><p>用自然语言说需求，如「今日晨检」「分析反馈」。路由规则按触发词自动匹配对应 Skill。</p></div>
+    <div class="step"><div class="n">4</div><h4>获取输出</h4><p>按场景拿到简报、需求清单、趋势异常、标签清单或整合策略建议。</p></div>
+  </div>
+
+  <div class="rule"></div>
+
+  <h4 style="font-size:10.5pt;margin-bottom:2.5mm">调用示例：触发词 → 匹配的 Skill → 输出</h4>
+  <div class="code" style="margin-bottom:4mm"><span class="y">&gt; 今日晨检</span>
+  <span class="c">→ daily-check</span>         读取 data/daily/ 当日指标 + 反馈 → 200 字简报 + 今日待办
+<span class="y">&gt; 分析反馈</span>
+  <span class="c">→ analyze-feedback</span>  情感判定 / 问题分类 / 需求提炼 → 情感分布 + 高频问题 Top5 + 带优先级的需求建议
+<span class="y">&gt; 分析数据</span>
+  <span class="c">→ analyze-product-metrics</span>  趋势识别 / 异常标注 / 归因假设 → 指标概览 + 异常清单 + HTML 看板
+<span class="y">&gt; 打标签</span>
+  <span class="c">→ tag-users</span>         生命周期 × 价值 × 反馈行为 → 标签清单 + 建议动作
+<span class="y">&gt; 分析本周运营情况</span>
+  <span class="c">→ integrated-report</span> 交叉验证反馈与数据 → 核心发现 + 交叉验证表 + 策略建议 + 下周监控重点</div>
+
+  <h4 style="font-size:10.5pt;margin-bottom:2.5mm">输出结果按场景区分</h4>
+  <table>
+    <thead>
+      <tr><th style="width:16%">场景</th><th style="width:26%">输入</th><th style="width:38%">输出</th><th style="width:12%">耗时</th><th style="width:8%">页</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><b>每日晨检</b></td><td>当日指标 + 当日反馈</td><td>200 字以内简报 + 今日待办</td><td>约 30 秒</td><td>P04</td></tr>
+      <tr><td><b>反馈处理</b></td><td>反馈文本</td><td>情感分布 + 高频问题 Top5 + 带优先级的需求建议</td><td>1–2 分钟</td><td>P05</td></tr>
+      <tr><td><b>指标监控</b></td><td>指标 CSV</td><td>核心指标概览 + 异常标注 + 归因假设（可选 HTML 看板）</td><td>1–2 分钟</td><td>—</td></tr>
+      <tr><td><b>用户分层</b></td><td>用户行为 CSV</td><td>标签清单 + 建议动作</td><td>1–2 分钟</td><td>P06</td></tr>
+      <tr><td><b>整合分析</b></td><td>以上全部产出</td><td>核心发现 + 交叉验证表 + 产品策略建议 + 下周监控重点</td><td>2–3 分钟</td><td>P07–P08</td></tr>
+    </tbody>
+  </table>
+
+  <div class="grid2" style="margin-top:4.5mm">
+    <div class="card">
+      <h4>迭代与调优怎么做</h4>
+      <p>如果输出格式不理想，直接告诉工作台怎么调，然后把新规则追加到对应的 <span class="mono">SKILL.md</span> 中。规则一旦沉淀，每次调整后输出就会稳定下来 —— 这是「一次调优、长期复用」的关键。</p>
+    </div>
+    <div class="card">
+      <h4>一次真实的调优记录</h4>
+      <p>端到端冒烟测试发现所有「下载 / 导出」按钮点了没反应：按钮写的是 <span class="mono">data-dl</span>，而事件处理只读了 <span class="mono">data-kind</span>，静默失败。<br>
+      修复后不只是「点一下不报错」，而是劫持 <span class="mono">createObjectURL</span> 与 <span class="mono">a.click</span>，逐个断言导出文件名与字节数，把这类静默失败直接钉死在测试里。</p>
+    </div>
+  </div>
+
+  <div class="pfoot"><span>运营分析工作台 · Web 版</span><span>03 / 09</span></div>
+</section>
+
+<!-- ================= 5 每日晨检 ================= -->
+<section class="page">
+  <div class="ph">
+    <span class="no">04</span>
+    <div>
+      <h2>场景一 · 每日晨检</h2>
+      <div class="sub">早上花三十秒跑一次，拿到两百字以内的简报和今日待办，知道今天优先处理什么</div>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:4mm">
+    <div class="card soft">
+      <h4>输入</h4>
+      <p>当日指标 CSV + 当日反馈 txt（<span class="mono">data/daily/</span>），系统自动取上一日指标做环比。</p>
+    </div>
+    <div class="card soft">
+      <h4>输出</h4>
+      <p>200 字以内简报（今日关注）+ 今日待办清单；异常指标与负面反馈在同一个视图里对照出现。</p>
+    </div>
+  </div>
+
+  <div class="shot"><img src="ui-dashboard.png" alt="每日晨检视图"></div>
+  <div class="cap">晨检视图：顶部 KPI 胶囊直接给状态（正常 / 需关注 / 异常），趋势图看连续走势，右侧收敛为「今日关注」与待办。</div>
+
+  <div class="rule"></div>
+
+  <div class="grid3">
+    <div class="card"><h4>今天先做什么</h4><p>异常项排在待办最前，避免「先做顺手的事、把风险留到周末」。示例中支付成功率与接口响应被标为异常，直接进入当日待办。</p></div>
+    <div class="card"><h4>为什么限制 200 字</h4><p>晨检的定位是「看一眼就走」。字数上限迫使输出收敛到结论，细节留给反馈 / 指标 / 整合分析三个专项流程。</p></div>
+    <div class="card"><h4>噪声怎么隔离</h4><p>日粒度只进日指标，周、月指标不参与晨检；口径里的阈值决定「正常 / 需关注 / 异常」，而不是靠人肉判断幅度。</p></div>
+  </div>
+
+  <div class="pfoot"><span>运营分析工作台 · Web 版</span><span>04 / 09</span></div>
+</section>
+
+<!-- ================= 6 反馈分析 ================= -->
+<section class="page">
+  <div class="ph">
+    <span class="no">05</span>
+    <div>
+      <h2>场景二 · 反馈处理</h2>
+      <div class="sub">把散乱的用户声音变成结构化的需求清单：情感判定 → 高频问题提取 → 优先级排序</div>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:4mm">
+    <div class="card soft">
+      <h4>输入</h4>
+      <p>反馈文本，一行一条：<span class="mono">时间 | 渠道 | 用户 | 内容</span>。渠道覆盖客服工单、应用商店、微信社群、微博。</p>
+    </div>
+    <div class="card soft">
+      <h4>输出</h4>
+      <p>情感分布（正面 / 中性 / 负面占比）+ 高频问题 Top5 + 带优先级（P0 / P1 / P2）的需求建议。</p>
+    </div>
+  </div>
+
+  <div class="shot"><img src="ui-feedback.png" alt="反馈分析视图"></div>
+  <div class="cap">反馈分析视图：情感分布环形图 → 高频问题 Top5 条形图 → 需求建议按优先级排序 → 底部保留反馈明细，结论可逐条回溯到原文。</div>
+
+  <div class="rule"></div>
+
+  <div class="grid3">
+    <div class="card"><h4>情感判定</h4><p>负面词典与正则共同判定（如「要等 XX 秒」「试了 N 次」这类表述单靠词表抓不到），避免把抱怨误判为中性。</p></div>
+    <div class="card"><h4>问题分类</h4><p>按计费 / 性能 / 体验 / 内容 / 功能缺失 / 其他六类归档，每类带严重度权重，决定优先级的底座。</p></div>
+    <div class="card"><h4>需求提炼</h4><p>把「希望支持批量删除」这类诉求从抱怨里拆出来，标记为需求类信号 —— 它不该被当成故障处理。</p></div>
+  </div>
+
+  <div class="pfoot"><span>运营分析工作台 · Web 版</span><span>05 / 09</span></div>
+</section>
+
+<!-- ================= 7 用户分层 ================= -->
+<section class="page">
+  <div class="ph">
+    <span class="no">06</span>
+    <div>
+      <h2>场景三 · 用户分层</h2>
+      <div class="sub">按生命周期阶段、价值标签、反馈行为三个维度打标签，输出标签清单与建议动作</div>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:4mm">
+    <div class="card soft">
+      <h4>输入</h4>
+      <p>用户行为 CSV（<span class="mono">data/users/</span>）：用户 ID、注册日期、最近活跃、行为次数、消费金额、反馈次数、最近反馈、来源渠道、备注。</p>
+    </div>
+    <div class="card soft">
+      <h4>输出</h4>
+      <p>三维标签（生命周期 / 价值 / 反馈行为）+ 每个用户对应的建议动作，形成后续运营的优先级依据。</p>
+    </div>
+  </div>
+
+  <div class="shot"><img src="ui-tags.png" alt="用户打标签视图"></div>
+  <div class="cap">用户分层视图：上排为三维标签口径，右侧给出分层后的建议动作；下排是逐用户的标签结果，可直接筛出待挽回名单。</div>
+
+  <div class="rule"></div>
+
+  <div class="grid3">
+    <div class="card"><h4>生命周期</h4><p>新用户 / 活跃 / 沉默 / 流失风险 / 已流失 / 回流，由注册天数、最近活跃天数等阈值自动判定。</p></div>
+    <div class="card"><h4>价值标签</h4><p>高 / 中 / 低价值 / 未付费，按累计消费金额分层。价值决定投入力度，生命周期决定触达方式。</p></div>
+    <div class="card"><h4>反馈行为</h4><p>高频反馈 / 问题反馈 / 正面反馈 / 无反馈。高频反馈用户进入产品共建名单，问题反馈承诺 48 小时内回访。</p></div>
+  </div>
+
+  <div class="callout" style="margin-top:4mm">
+    交叉使用价值：一次分层就能直接产出可执行名单。示例数据中 <b>U10999、U11023</b> 两位高 / 中价值用户已沉默或流失 —— 单独看指标只会看到活跃数下滑，
+    单独看反馈根本没有他们的声音，只有把标签与指标、反馈放在一起，才能发现「沉默的高价值用户在流失」。
+  </div>
+
+  <div class="pfoot"><span>运营分析工作台 · Web 版</span><span>06 / 09</span></div>
+</section>
+
+<!-- ================= 8 整合分析 · 交叉验证 ================= -->
+<section class="page">
+  <div class="ph">
+    <span class="no">07</span>
+    <div>
+      <h2>场景四 · 整合分析：交叉验证表</h2>
+      <div class="sub">数据示例：2026-10-04 整合分析，反馈侧结论 × 指标侧结论逐条比对</div>
+    </div>
+  </div>
+
+  <div class="kpi" style="margin-bottom:4mm">
+    <div class="box"><div class="v">8</div><div class="l">支付成功率连续下降期数<br>97.7 → 93.2</div></div>
+    <div class="box"><div class="v">10 / 7</div><div class="l">计费问题提及条数 / 用户数<br>负面反馈占比 83.3%</div></div>
+    <div class="box"><div class="v">3 / 1 / 4</div><div class="l">印证 / 背离 / 无法判断</div></div>
+    <div class="box"><div class="v">2</div><div class="l">高 / 中价值用户沉默或流失<br>U10999、U11023</div></div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th style="width:4%">#</th><th style="width:36%">用户声音（反馈结论）</th><th style="width:44%">数据证据（指标结论）</th><th style="width:16%">结论</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>计费问题：10 条 / 7 位用户。如「支付页面一直转圈，最后提示失败，但钱好像扣了」</td>
+        <td>支付成功率(%) 93.4（异常，环比 −2.6%）；退款率(%) 3.2（异常，环比 +52.4%）；订单转化率(%) 2.86（需关注，环比 −5.3%）</td>
+        <td><span class="tag g">✅ 印证</span></td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>性能问题：7 条 / 2 位用户。如「导出报表要等一分多钟，上个月还是十几秒」</td>
+        <td>接口平均响应时长(ms) 2050（异常，环比 +9%）；核心功能使用率(%) 40.5（正常，环比 −2.4%）</td>
+        <td><span class="tag g">✅ 印证</span></td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>其他：3 条 / 2 位用户。如「客户说收不到验证码，试了五次」</td>
+        <td>口径中未映射相关指标（属需求类信号，不体现在短期指标上）</td>
+        <td><span class="tag b">❓ 无法判断</span></td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>体验问题：2 条 / 1 位用户。如「新版本找不到导出入口了，之前的按钮去哪了」</td>
+        <td>核心功能使用率(%) 40.5（正常）；次日留存率(%) 34.8（需关注，环比 −2.5%）</td>
+        <td><span class="tag g">✅ 印证</span></td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>功能缺失：2 条 / 0 位用户。如「希望支持批量删除，一个个删太累了」</td>
+        <td>口径中未映射相关指标（属需求类信号，建议用需求排期跟踪而非指标）</td>
+        <td><span class="tag b">❓ 无法判断</span></td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td>反馈侧无对应声音</td>
+        <td>负面反馈数 14（异常）</td>
+        <td><span class="tag r">⚠️ 背离</span></td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td>反馈文件里判定为负面 8 条（2026-10-02）</td>
+        <td>指标「负面反馈数」记录 13 条</td>
+        <td><span class="tag b">❓ 无法判断</span></td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td>反馈文件里判定为负面 12 条（2026-10-03）</td>
+        <td>指标「负面反馈数」记录 14 条</td>
+        <td><span class="tag b">❓ 无法判断</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout" style="margin-top:4mm">
+    <b>怎么读这张表：</b>「印证」说明用户的声音在数据上站得住，可以直接立项；「背离」（第 6 行）说明反馈没提但指标已经恶化 —— 只靠反馈驱动会漏掉这类沉默的恶化，必须用指标兜底；
+    「无法判断」两类：需求类信号本来就不该用短期指标衡量（3、5 行），以及两边口径不一致、需要先对齐导出与判定标准（7、8 行）。
+  </div>
+
+  <div class="rule"></div>
+
+  <h4 style="font-size:10.5pt;margin-bottom:2.5mm">周粒度趋势：五个核心指标同步走弱（2026-W33 → W40）</h4>
+  <table class="tl">
+    <thead><tr><th style="width:30%">周指标</th><th style="width:14%">W33 起点</th><th style="width:14%">W40 当前</th><th style="width:14%">变化</th><th style="width:28%">与日线结论的关系</th></tr></thead>
+    <tbody>
+      <tr><td>支付成功率(%)</td><td class="num">97.8</td><td class="num">93.4</td><td class="num">−4.4</td><td>与「连续 8 期下降」指向同一件事</td></tr>
+      <tr><td>退款率(%)</td><td class="num">1.4</td><td class="num">3.2</td><td class="num">+1.8</td><td>支付链路问题的下游后果</td></tr>
+      <tr><td>订单转化率(%)</td><td class="num">3.20</td><td class="num">2.86</td><td class="num">−0.34</td><td>用户卡在支付环节，转化被拖住</td></tr>
+      <tr><td>核心功能使用率(%)</td><td class="num">42.3</td><td class="num">40.5</td><td class="num">−1.8</td><td>对应体验问题（入口找不到）</td></tr>
+      <tr><td>次日留存率(%)</td><td class="num">36.4</td><td class="num">34.8</td><td class="num">−1.6</td><td>体验受损后的留存滞后反应</td></tr>
+    </tbody>
+  </table>
+  <div class="cap">周粒度只看趋势、不追单日噪声；日粒度用来定位当天发生了什么。两者结论一致时，策略建议才有底气。这也是「日周月分层」的意义：不同频率的数据回答不同的问题。</div>
+
+  <div class="pfoot"><span>运营分析工作台 · Web 版</span><span>07 / 09</span></div>
+</section>
+
+<!-- ================= 9 策略建议 ================= -->
+<section class="page">
+  <div class="ph">
+    <span class="no">08</span>
+    <div>
+      <h2>整合分析输出：核心发现 → 策略建议 → 监控重点</h2>
+      <div class="sub">策略建议不靠感觉，每一条都能指回具体的反馈条目与指标数值</div>
+    </div>
+  </div>
+
+  <h4 style="font-size:10.5pt;margin-bottom:2.5mm">本期核心发现</h4>
+  <ul style="margin-bottom:4mm">
+    <li><b>支付成功率(%)</b> 连续 8 期下降（97.7 → 93.2），是本期最明确的趋势信号。</li>
+    <li>反馈侧最集中在 <b>计费问题</b>（10 条 / 7 位用户），负面反馈占比 83.3%。</li>
+    <li>交叉验证结果：印证 3 条 / 背离 1 条 / 无法判断 4 条。背离项通常最值得优先排查 —— 问题可能没被用户表达出来，或指标口径覆盖不到。</li>
+    <li>用户分层风险：2 位高 / 中价值用户已沉默或流失（U10999、U11023），建议进入挽回名单。</li>
+  </ul>
+
+  <h4 style="font-size:10.5pt;margin-bottom:2.5mm">产品策略建议</h4>
+  <table style="margin-bottom:4mm">
+    <thead>
+      <tr><th style="width:8%">优先级</th><th style="width:30%">动作</th><th style="width:30%">依据</th><th style="width:32%">验证方式</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="tag r">P0</span></td>
+        <td>拉取失败订单明细定位支付链路，涉资金工单当日闭环</td>
+        <td>计费问题：提及 10 次 / 7 位用户，如「支付页面一直转圈，最后提示失败，但钱好像扣了」</td>
+        <td>下周支付成功率 ≥ 97%、退款率 ≤ 2.0%，且涉资金工单归零</td>
+      </tr>
+      <tr>
+        <td><span class="tag r">P0</span></td>
+        <td>定位慢接口并单独打点，先做限流 / 降级止损</td>
+        <td>性能问题：提及 7 次 / 2 位用户，如「导出报表要等一分多钟，上个月还是十几秒」</td>
+        <td>接口响应 P95 连续 3 天 ≤ 1500ms，导出平均耗时回到 20 秒内</td>
+      </tr>
+      <tr>
+        <td><span class="tag w">P1</span></td>
+        <td>复核入口与文案，必要时热修复并回访</td>
+        <td>体验问题：提及 2 次 / 1 位用户，如「新版本找不到导出入口了」</td>
+        <td>核心功能使用率回升至 ≥ 40%，入口相关反馈归零</td>
+      </tr>
+      <tr>
+        <td><span class="tag w">P1</span></td>
+        <td>针对支付成功率做专项排查与回归验证</td>
+        <td>连续 8 期下降，起点 97.7 → 当前 93.2</td>
+        <td>下周该指标回到正常区间</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="grid2">
+    <div>
+      <h4 style="font-size:10.5pt;margin-bottom:2.5mm">下周监控重点（阈值 → 触发动作）</h4>
+      <table>
+        <thead><tr><th style="width:42%">指标</th><th style="width:20%">阈值</th><th style="width:38%">触发动作</th></tr></thead>
+        <tbody>
+          <tr><td>退款率(%)</td><td class="num">≤ 2</td><td>拉失败明细并排查支付链路</td></tr>
+          <tr><td>接口平均响应时长(ms)</td><td class="num">≤ 1500</td><td>定位慢接口</td></tr>
+          <tr><td>负面反馈数</td><td class="num">≤ 5</td><td>按归因假设逐条验证</td></tr>
+          <tr><td>支付成功率(%)</td><td class="num">≥ 97</td><td>拉失败明细并排查支付链路</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h4 style="font-size:10.5pt;margin-bottom:2.5mm">无法判断的 4 条，后续怎么处理</h4>
+      <table>
+        <thead><tr><th style="width:26%">类型</th><th style="width:34%">具体</th><th style="width:40%">处理方式</th></tr></thead>
+        <tbody>
+          <tr><td>需求类信号<br>（2 条）</td><td>收不到验证码（3 条 / 2 位用户）；希望支持批量删除（2 条）</td><td>进需求排期跟踪，不用短期指标衡量</td></tr>
+          <tr><td>口径不一致<br>（2 条）</td><td>10-02：反馈判负 8 条 vs 指标 13 条；10-03：反馈判负 12 条 vs 指标 14 条</td><td>先对齐反馈导出范围与负面判定标准，再谈趋势</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="rule" style="margin:4mm 0"></div>
+
+  <h4 style="font-size:10.5pt;margin-bottom:2.5mm">数据缺口与补数清单</h4>
+  <div class="callout" style="border-left-color:#e08c00;background:#fffaf0">
+    缺反馈数据的日期：<b>2026-09-20 ~ 2026-10-01（共 12 天）</b>。建议补导出，或确认是否属正常情况 —— 这段缺口会让「负面反馈数」的同比与趋势判断失去基准。<br>
+    整合分析不只输出结论，还要暴露<b>结论的不确定性来自哪里</b>：无法判断的 4 条里，有 2 条就来自这份数据缺口与两边口径不一致。
+  </div>
+
+  <div class="pfoot"><span>运营分析工作台 · Web 版</span><span>08 / 09</span></div>
+</section>
+
+<!-- ================= 10 工程与线上 ================= -->
+<section class="page">
+  <div class="ph">
+    <span class="no">09</span>
+    <div>
+      <h2>工程可靠性与线上访问</h2>
+      <div class="sub">纯静态零构建，打开网址就能用；数据只保存在本机浏览器里</div>
+    </div>
+  </div>
+
+  <div class="kpi" style="margin-bottom:4mm">
+    <div class="box"><div class="v">48 / 48</div><div class="l">引擎单元测试<br>解析 · 占比 · 分类 · 异常判定</div></div>
+    <div class="box"><div class="v">67 / 67</div><div class="l">浏览器端到端冒烟测试<br>九个视图 · 五类分析 · 11 种导出</div></div>
+    <div class="box"><div class="v">0</div><div class="l">外部依赖<br>零依赖 SVG 图表</div></div>
+    <div class="box"><div class="v">本机</div><div class="l">数据存储位置<br>localStorage，不上传</div></div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:4mm">
+    <div class="card soft">
+      <h4>为什么用确定性规则引擎</h4>
+      <p>分析动作本质固定，规则引擎比每次等模型推理更快、更稳、可复现，而且不消耗 token。AI 解读作为可选能力保留：Key 只存本机，用不用由使用者决定。</p>
+    </div>
+    <div class="card soft">
+      <h4>怎么保证输出不悄悄坏掉</h4>
+      <p>解析行数、情感占比、问题分类、异常判定、简报字数上限、标签三维、交叉验证三类结论，全部有断言；导出的文件名与字节数也在测试里逐个核对。</p>
+    </div>
+  </div>
+
+  <h4 style="font-size:10.5pt;margin-bottom:2.5mm">三步自己用起来</h4>
+  <div class="grid3" style="margin-bottom:4mm">
+    <div class="card"><h4>① 打开网址</h4><p>点「载入示例数据」先跑通一遍，或直接上传自己的指标 CSV / 反馈 txt / 用户行为 CSV。</p></div>
+    <div class="card"><h4>② 跑一个场景</h4><p>按触发词跑晨检或反馈分析，对照输出检查是否符合你自己的口径与汇报格式。</p></div>
+    <div class="card"><h4>③ 沉淀口径</h4><p>口径不对就到 config 视图改阈值与关键词，输出格式不对就调整规则；改完规则稳定下来，后续复用。</p></div>
+  </div>
+
+  <div class="code" style="margin-bottom:4mm">git clone https://github.com/Yjconger/ops-workbench-web.git
+<span class="c"># 或用本地一键启动（自动找 Python 起静态服务器并打开浏览器）</span>
+powershell -ExecutionPolicy Bypass -File scripts\serve.ps1
+<span class="c"># 线上地址（GitHub Pages 已开启，任何人可直接打开）</span>
+https://yjconger.github.io/ops-workbench-web/</div>
+
+  <div class="grid2">
+    <div>
+      <div class="shot"><img src="live-home.png" alt="线上首页实拍"></div>
+      <div class="cap">线上实拍 · 首屏：左侧按分组组织的导航，顶部全局搜索（支持 / 快捷键），KPI 状态胶囊。</div>
+    </div>
+    <div>
+      <div class="shot"><img src="live-crop.png" alt="线上界面细节"></div>
+      <div class="cap">线上实拍 · 交互细节：自然语言指令入口，触发词在这里被做成可直接点选的入口。</div>
+    </div>
+  </div>
+
+  <div class="pfoot"><span>运营分析工作台 · Web 版</span><span>09 / 09</span></div>
+</section>
+
+</body>
+</html>

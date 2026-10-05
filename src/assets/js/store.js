@@ -1,8 +1,8 @@
-﻿/* store.js — 工作区状态与本地持久化（浏览器 localStorage） */
+/* store.js — 工作区状态与本地持久化（浏览器 localStorage） */
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) { module.exports = factory(); }
+  if (typeof module === 'object' && module.exports) { module.exports = factory(root); }
   else { root.OpsStore = factory(root); }
-})(typeof self !== 'undefined' ? self : this, function (root) {
+})(typeof self !== 'undefined' ? self : (typeof globalThis !== 'undefined' ? globalThis : this), function (root) {
   'use strict';
   var KEY = 'ops-workbench-web-v1';
   var E = (root && root.OpsEngine) || (typeof require === 'function' ? require('./engine.js') : null);
@@ -18,6 +18,7 @@
       ledgers: { ledger: [], metrics: [], tags: [] },
       config: JSON.parse(JSON.stringify(D.DEFAULT_CONFIG)),
       llm: { enabled: false, baseUrl: 'https://api.openai.com/v1', apiKey: '', model: 'gpt-4o-mini' },
+      sync: { baseUrl: 'data/', auto: true, files: {}, last: null, log: [] },
       updated: ''
     };
   }
@@ -33,6 +34,9 @@
         state.ledgers = Object.assign({ ledger: [], metrics: [], tags: [] }, s.ledgers || {});
         state.config = s.config || JSON.parse(JSON.stringify(D.DEFAULT_CONFIG));
         state.llm = Object.assign({ enabled: false, baseUrl: 'https://api.openai.com/v1', apiKey: '', model: 'gpt-4o-mini' }, s.llm || {});
+        state.sync = Object.assign({ baseUrl: 'data/', auto: true, files: {}, last: null, log: [] }, s.sync || {});
+        state.sync.files = state.sync.files || {};
+        state.sync.log = state.sync.log || [];
       }
     } catch (e) { console.warn('读取本地数据失败：', e); }
     return state;
